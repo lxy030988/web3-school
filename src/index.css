@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: linear-gradient(135deg, #070714 0%, #0f0f23 50%, #1a0a2e 100%);
+  color: #f8fafc;
+  min-height: 100vh;
+}
+
+.btn-primary {
+  @apply px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl font-semibold text-white transition-all hover:shadow-lg hover:scale-105;
+}
+
+.btn-secondary {
+  @apply px-6 py-3 border border-purple-500 rounded-xl font-semibold text-purple-400 transition-all hover:bg-purple-500/20;
+}
+
+.card {
+  @apply bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 transition-all hover:border-purple-500/30;
+}
+
+.input-field {
+  @apply w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50;
+}
+
+.gradient-text {
+  @apply bg-gradient-to-r from-purple-400 via-pink-500 to-emerald-400 bg-clip-text text-transparent;
+}
