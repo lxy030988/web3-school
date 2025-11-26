@@ -5,7 +5,12 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "node": "hardhat node",
+    "deploy:local": "hardhat run scripts/deploy.js --network localhost",
+    "create-courses": "hardhat run scripts/create-courses.js --network localhost"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.28.0",
@@ -14,12 +19,21 @@
     "react-router-dom": "^6.22.0",
     "viem": "^2.8.0",
     "wagmi": "^2.5.0",
-    "ethers": "^6.11.0",
     "zustand": "^4.5.0"
   },
   "devDependencies": {
+    "@nomicfoundation/hardhat-ethers": "^3.1.2",
+    "@nomicfoundation/hardhat-mocha": "^3.0.7",
+    "@nomicfoundation/hardhat-toolbox": "^6.1.0",
+    "@nomicfoundation/hardhat-toolbox-mocha-ethers": "^3.0.1",
+    "@openzeppelin/contracts": "^5.4.0",
     "@vitejs/plugin-react": "^4.2.0",
     "autoprefixer": "^10.4.17",
+    "chai": "^4.5.0",
+    "dotenv": "^17.2.3",
+    "ethers": "^6.11.0",
+    "hardhat": "^2.27.0",
+    "mocha": "^11.7.5",
     "postcss": "^8.4.35",
     "tailwindcss": "^3.4.1",
     "vite": "^5.1.0"

@@ -2,7 +2,7 @@ import { useAccount, useReadContract, useWriteContract, useSignMessage, useChain
 import { parseEther, formatEther } from 'viem'
 import { useCallback, useEffect } from 'react'
 import { getContractAddress } from '../config/wagmi'
-import { YDTokenABI, CourseMarketABI, UserProfileABI, AaveStakingABI } from '../contracts/abis'
+import { YDTokenABI, CourseMarketABI, CourseFactoryABI, UserProfileABI, AaveStakingABI } from '../contracts/abis'
 import { useTokenStore, useStakingStore, useUIStore } from '../store'
 
 export function useYDToken() {
@@ -32,6 +32,49 @@ export function useYDToken() {
     ydBalance, allowance, isBuying, isApproving,
     buyTokens: (eth) => buyTokens({ address: tokenAddress, abi: YDTokenABI, functionName: 'buyTokens', value: parseEther(eth) }),
     approve: (amt) => approve({ address: tokenAddress, abi: YDTokenABI, functionName: 'approve', args: [marketAddress, parseEther(amt)] }),
+  }
+}
+
+export function useCourses() {
+  const chainId = useChainId()
+  const factoryAddress = getContractAddress('CourseFactory', chainId)
+
+  const { data: courseIds } = useReadContract({
+    address: factoryAddress,
+    abi: CourseFactoryABI,
+    functionName: 'getAllCourses',
+  })
+
+  return {
+    courseIds: courseIds || [],
+  }
+}
+
+export function useCourse(courseId) {
+  const chainId = useChainId()
+  const factoryAddress = getContractAddress('CourseFactory', chainId)
+
+  const { data: course } = useReadContract({
+    address: factoryAddress,
+    abi: CourseFactoryABI,
+    functionName: 'getCourse',
+    args: [courseId],
+    enabled: !!courseId,
+  })
+
+  if (!course) return null
+
+  return {
+    id: course[0],
+    author: course[1],
+    name: course[2],
+    description: course[3],
+    category: course[4],
+    price: formatEther(course[5]),
+    contentURI: course[6],
+    createdAt: course[7],
+    totalStudents: course[8],
+    isActive: course[9],
   }
 }
 

@@ -1,25 +1,57 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import CourseCard from '../components/CourseCard'
+import { useCourses, useCourse } from '../hooks/useWeb3'
 
-const mockCourses = [
-  { id: 1, name: 'Solidity 智能合约开发', description: '从零开始学习 Solidity', category: 'smart_contract', price: '100', totalStudents: 1234 },
-  { id: 2, name: 'DeFi 协议原理', description: '深入理解 DeFi 生态', category: 'defi', price: '200', totalStudents: 856 },
-  { id: 3, name: 'NFT 市场开发', description: '构建完整 NFT 市场', category: 'nft', price: '150', totalStudents: 678 },
-  { id: 4, name: '区块链基础', description: '从比特币到以太坊', category: 'blockchain', price: '50', totalStudents: 2345 },
-]
+function CourseItem({ courseId }) {
+  const course = useCourse(courseId)
+  if (!course || !course.isActive) return null
+  return <CourseCard course={course} />
+}
 
 export default function CoursesPage() {
   const [search, setSearch] = useState('')
-  const filtered = mockCourses.filter(c => c.name.includes(search) || c.description.includes(search))
+  const { courseIds } = useCourses()
+
+  // 由于没有课程数据,显示创建课程提示
+  const hasCourses = courseIds && courseIds.length > 0
 
   return (
     <div className="min-h-screen py-12 px-4">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold mb-8">课程<span className="gradient-text">市场</span></h1>
-        <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="搜索课程..." className="input-field mb-8 max-w-md" />
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filtered.map(course => <CourseCard key={course.id} course={course} />)}
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-4xl font-bold">课程<span className="gradient-text">市场</span></h1>
+          <Link to="/create-course" className="btn-primary">
+            ➕ 创建课程
+          </Link>
         </div>
+
+        {hasCourses && (
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="搜索课程..."
+            className="input-field mb-8 max-w-md"
+          />
+        )}
+
+        {hasCourses ? (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {courseIds.map(courseId => (
+              <CourseItem key={courseId.toString()} courseId={courseId} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-20 card">
+            <div className="text-6xl mb-4">📚</div>
+            <h2 className="text-2xl font-bold mb-2">暂无课程</h2>
+            <p className="text-gray-400 mb-6">课程市场中还没有课程,快来创建第一个吧!</p>
+            <Link to="/create-course" className="btn-primary inline-block">
+              创建第一个课程
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   )
