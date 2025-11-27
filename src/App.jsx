@@ -5,6 +5,7 @@ import CoursesPage from './pages/CoursesPage'
 import CreateCoursePage from './pages/CreateCoursePage'
 import StakingPage from './pages/StakingPage'
 import ProfilePage from './pages/ProfilePage'
+import MyCreatedCoursesPage from './pages/MyCreatedCoursesPage'
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/courses" element={<CoursesPage />} />
+          <Route path="/my-courses" element={<MyCreatedCoursesPage />} />
           <Route path="/create-course" element={<CreateCoursePage />} />
           <Route path="/staking" element={<StakingPage />} />
           <Route path="/profile" element={<ProfilePage />} />

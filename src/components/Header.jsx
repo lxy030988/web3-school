@@ -12,6 +12,7 @@ export default function Header() {
   const navLinks = [
     { path: '/', label: '首页' },
     { path: '/courses', label: '课程市场' },
+    { path: '/my-courses', label: '我的课程' },
     { path: '/create-course', label: '创建课程' },
     { path: '/staking', label: '质押理财' },
     { path: '/profile', label: '个人中心' },

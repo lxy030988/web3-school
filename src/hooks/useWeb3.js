@@ -1,18 +1,16 @@
 import { useAccount, useReadContract, useWriteContract, useSignMessage, useChainId } from 'wagmi'
 import { parseEther, formatEther } from 'viem'
-import { useCallback, useEffect } from 'react'
+import { useCallback } from 'react'
 import { getContractAddress } from '../config/wagmi'
 import { YDTokenABI, CourseMarketABI, CourseFactoryABI, UserProfileABI, AaveStakingABI } from '../contracts/abis'
-import { useTokenStore, useStakingStore, useUIStore } from '../store'
 
 export function useYDToken() {
   const { address } = useAccount()
   const chainId = useChainId()
-  const { setYdBalance, setAllowance, ydBalance, allowance } = useTokenStore()
   const tokenAddress = getContractAddress('YDToken', chainId)
   const marketAddress = getContractAddress('CourseMarket', chainId)
 
-  const { data: balance } = useReadContract({
+  const { data: balance, refetch: refetchBalance } = useReadContract({
     address: tokenAddress,
     abi: YDTokenABI,
     functionName: 'balanceOf',
@@ -32,27 +30,18 @@ export function useYDToken() {
 
   const { writeContract, data: txHash, isPending } = useWriteContract()
 
-  console.log(
-    'useYDToken - Chain:',
-    chainId,
-    'Token:',
-    tokenAddress,
-    'Balance:',
-    balance,
-    'Formatted:',
-    balance ? formatEther(balance) : '0'
-  )
+  // 直接从合约数据计算
+  const ydBalance = balance ? formatEther(balance) : '0'
+  const allowance = currentAllowance ? formatEther(currentAllowance) : '0'
 
-  useEffect(() => {
-    if (balance) setYdBalance(formatEther(balance))
-    if (currentAllowance) setAllowance(formatEther(currentAllowance))
-  }, [balance, currentAllowance, setYdBalance, setAllowance])
+  console.log('useYDToken - Balance:', ydBalance, 'YD')
 
   return {
     ydBalance,
     allowance,
     isPending,
     txHash,
+    refetchBalance,
     buyTokens: eth =>
       writeContract({
         address: tokenAddress,
@@ -178,11 +167,19 @@ export function useHasPurchased(courseId) {
   }
 }
 
+export function useIsAuthor(courseId) {
+  const { address } = useAccount()
+  const course = useCourse(courseId)
+
+  if (!course || !address) return false
+
+  return course.author?.toLowerCase() === address.toLowerCase()
+}
+
 export function useUserProfile() {
   const { address } = useAccount()
   const chainId = useChainId()
   const { signMessageAsync } = useSignMessage()
-  const { addNotification } = useUIStore()
   const profileAddress = getContractAddress('UserProfile', chainId)
 
   const { data: nonce } = useReadContract({
@@ -207,10 +204,10 @@ export function useUserProfile() {
           args: [name, sig]
         })
       } catch (e) {
-        addNotification({ type: 'error', message: e.message })
+        console.error('Failed to update display name:', e.message)
       }
     },
-    [nonce, signMessageAsync]
+    [nonce, signMessageAsync, writeContract, profileAddress]
   )
 
   return { updateDisplayName, isUpdating: isPending }
@@ -219,39 +216,136 @@ export function useUserProfile() {
 export function useAaveStaking() {
   const { address } = useAccount()
   const chainId = useChainId()
-  const { setStakedAmount, setApy, stakedAmount, apy } = useStakingStore()
   const stakingAddress = getContractAddress('AaveStaking', chainId)
+  const tokenAddress = getContractAddress('YDToken', chainId)
 
-  const { data: staked } = useReadContract({
+  const { data: staked, refetch: refetchStaked } = useReadContract({
     address: stakingAddress,
     abi: AaveStakingABI,
     functionName: 'getStakedBalance',
     args: [address],
-    enabled: !!address
+    enabled: !!address && !!stakingAddress,
+    watch: true
   })
 
   const { data: currentApy } = useReadContract({
     address: stakingAddress,
     abi: AaveStakingABI,
-    functionName: 'getCurrentAPY'
+    functionName: 'getCurrentAPY',
+    enabled: !!stakingAddress,
+    watch: true
   })
 
-  const { writeContract: depositYD, isPending: isDepositing } = useWriteContract()
-  const { writeContract: withdrawYD, isPending: isWithdrawing } = useWriteContract()
+  const { data: stakingAllowance, refetch: refetchAllowance } = useReadContract({
+    address: tokenAddress,
+    abi: YDTokenABI,
+    functionName: 'allowance',
+    args: [address, stakingAddress],
+    enabled: !!address && !!tokenAddress && !!stakingAddress,
+    watch: true
+  })
 
-  useEffect(() => {
-    if (staked) setStakedAmount(formatEther(staked[0]))
-    if (currentApy) setApy((Number(currentApy) / 100).toString())
-  }, [staked, currentApy])
+  const { data: pendingRewards, refetch: refetchRewards } = useReadContract({
+    address: stakingAddress,
+    abi: AaveStakingABI,
+    functionName: 'calculateRewards',
+    args: [address],
+    enabled: !!address && !!stakingAddress,
+    watch: true
+  })
+
+  const { writeContract, data: txHash, isPending } = useWriteContract()
+
+  // 查询 Aave 相关数据
+  const { data: aaveBalance } = useReadContract({
+    address: stakingAddress,
+    abi: AaveStakingABI,
+    functionName: 'getAaveBalance',
+    enabled: !!stakingAddress,
+    watch: true
+  })
+
+  const { data: aaveEarnings } = useReadContract({
+    address: stakingAddress,
+    abi: AaveStakingABI,
+    functionName: 'getAaveEarnings',
+    enabled: !!stakingAddress,
+    watch: true
+  })
+
+  // 直接从合约数据计算，不使用 store
+  const stakedYDAmount = staked && staked.length >= 2 ? formatEther(staked[0]) : '0'
+  const stakedETHAmount = staked && staked.length >= 2 ? formatEther(staked[1]) : '0'
+  const apy = currentApy ? (Number(currentApy) / 100).toString() : '5'
+
+  console.log('useAaveStaking - YD:', stakedYDAmount, 'ETH:', stakedETHAmount, 'APY:', apy)
 
   return {
-    stakedAmount,
+    // YD 质押数据
+    stakedAmount: stakedYDAmount,
+    stakedYDAmount,
+    // ETH 质押数据
+    stakedETHAmount,
+    aaveBalance: aaveBalance ? formatEther(aaveBalance) : '0',
+    aaveEarnings: aaveEarnings ? formatEther(aaveEarnings) : '0',
+    // 通用数据
     apy,
-    isDepositing,
-    isWithdrawing,
+    pendingRewards: pendingRewards ? formatEther(pendingRewards) : '0',
+    stakingAllowance: stakingAllowance ? formatEther(stakingAllowance) : '0',
+    isPending,
+    txHash,
+    refetchStaked,
+    refetchAllowance,
+    refetchRewards,
+    // YD 操作
+    approveStaking: amt =>
+      writeContract({
+        address: tokenAddress,
+        abi: YDTokenABI,
+        functionName: 'approve',
+        args: [stakingAddress, parseEther(amt)]
+      }),
     depositYD: amt =>
-      depositYD({ address: stakingAddress, abi: AaveStakingABI, functionName: 'depositYD', args: [parseEther(amt)] }),
+      writeContract({
+        address: stakingAddress,
+        abi: AaveStakingABI,
+        functionName: 'depositYD',
+        args: [parseEther(amt)]
+      }),
     withdrawYD: amt =>
-      withdrawYD({ address: stakingAddress, abi: AaveStakingABI, functionName: 'withdrawYD', args: [parseEther(amt)] })
+      writeContract({
+        address: stakingAddress,
+        abi: AaveStakingABI,
+        functionName: 'withdrawYD',
+        args: [parseEther(amt)]
+      }),
+    // ETH 操作
+    depositETH: amt =>
+      writeContract({
+        address: stakingAddress,
+        abi: AaveStakingABI,
+        functionName: 'depositETH',
+        value: parseEther(amt)
+      }),
+    withdrawETH: amt =>
+      writeContract({
+        address: stakingAddress,
+        abi: AaveStakingABI,
+        functionName: 'withdrawETH',
+        args: [parseEther(amt)]
+      }),
+    // 收益操作
+    claimRewards: () =>
+      writeContract({
+        address: stakingAddress,
+        abi: AaveStakingABI,
+        functionName: 'claimRewards'
+      }),
+    compoundRewards: () =>
+      writeContract({
+        address: stakingAddress,
+        abi: AaveStakingABI,
+        functionName: 'compoundRewards'
+      })
   }
 }

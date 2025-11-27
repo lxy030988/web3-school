@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useAccount } from 'wagmi'
+import { useState, useEffect } from 'react'
+import { useAccount, useWaitForTransactionReceipt } from 'wagmi'
 import { useUserProfile, useYDToken, usePurchasedCourses, useCourse } from '../hooks/useWeb3'
 
 function PurchasedCourseCard({ courseId }) {
@@ -30,9 +30,41 @@ export default function ProfilePage() {
   const { address, isConnected } = useAccount()
   const [name, setName] = useState('')
   const [isEditing, setIsEditing] = useState(false)
+  const [ethAmount, setEthAmount] = useState('')
+  const [lastProcessedTx, setLastProcessedTx] = useState(null)
   const { updateDisplayName, isUpdating } = useUserProfile()
-  const { ydBalance } = useYDToken()
+  const { ydBalance, buyTokens, isPending, txHash, refetchBalance } = useYDToken()
   const { purchasedCourseIds } = usePurchasedCourses()
+
+  const { isSuccess: isTransactionSuccess } = useWaitForTransactionReceipt({
+    hash: txHash
+  })
+
+  // 购买代币成功后刷新余额
+  useEffect(() => {
+    if (isTransactionSuccess && txHash && txHash !== lastProcessedTx) {
+      console.log('✅ Purchase successful! Hash:', txHash)
+      setLastProcessedTx(txHash)
+
+      // 多次刷新确保数据更新
+      const refreshBalance = () => {
+        console.log('🔄 Refreshing balance...')
+        refetchBalance()
+      }
+
+      refreshBalance()
+      setTimeout(refreshBalance, 1000)
+      setTimeout(refreshBalance, 2000)
+
+      alert('✅ 购买成功!')
+    }
+  }, [isTransactionSuccess, txHash, lastProcessedTx, refetchBalance])
+
+  const handleBuyTokens = () => {
+    if (!ethAmount || parseFloat(ethAmount) <= 0) return
+    buyTokens(ethAmount)
+    setEthAmount('')
+  }
 
   const handleSave = async () => {
     if (!name.trim()) return
@@ -101,6 +133,32 @@ export default function ProfilePage() {
               <p className="text-purple-400 mt-2">余额: {parseFloat(ydBalance || 0).toFixed(2)} YD</p>
             </div>
           </div>
+        </div>
+
+        <div className="card mb-8">
+          <h3 className="text-lg font-semibold mb-4">购买 YD 代币</h3>
+          <p className="text-gray-400 text-sm mb-4">使用 ETH 购买 YD 代币。汇率: 1 ETH = 1000 YD (0.001 ETH = 1 YD)</p>
+          <div className="flex gap-3">
+            <input
+              type="number"
+              value={ethAmount}
+              onChange={e => setEthAmount(e.target.value)}
+              placeholder="输入 ETH 数量"
+              className="input-field flex-1"
+              disabled={isPending}
+              step="0.001"
+            />
+            <button
+              onClick={handleBuyTokens}
+              disabled={isPending || !ethAmount || parseFloat(ethAmount) <= 0}
+              className="btn-primary px-6 whitespace-nowrap"
+            >
+              {isPending ? '购买中...' : '购买 YD'}
+            </button>
+          </div>
+          <p className="text-gray-500 text-xs mt-2">
+            预计获得: {ethAmount ? (parseFloat(ethAmount) * 1000).toFixed(2) : '0'} YD
+          </p>
         </div>
 
         <h3 className="text-xl font-bold mb-4">我的课程 ({purchasedCourseIds.length})</h3>

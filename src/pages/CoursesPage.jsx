@@ -1,16 +1,22 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useAccount } from 'wagmi'
 import CourseCard from '../components/CourseCard'
 import { useCourses, useCourse } from '../hooks/useWeb3'
 
-function CourseItem({ courseId }) {
+function CourseItem({ courseId, currentUserAddress }) {
   const course = useCourse(courseId)
+
+  // 过滤掉自己创建的课程
   if (!courseId || !course || !course.isActive) return null
+  if (currentUserAddress && course.author?.toLowerCase() === currentUserAddress.toLowerCase()) return null
+
   return <CourseCard course={course} />
 }
 
 export default function CoursesPage() {
   const [search, setSearch] = useState('')
+  const { address } = useAccount()
   const { courseIds } = useCourses()
 
   // 过滤掉无效的 courseId
@@ -44,7 +50,7 @@ export default function CoursesPage() {
         {hasCourses ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {validCourseIds.map(courseId => (
-              <CourseItem key={courseId.toString()} courseId={courseId} />
+              <CourseItem key={courseId.toString()} courseId={courseId} currentUserAddress={address} />
             ))}
           </div>
         ) : (
