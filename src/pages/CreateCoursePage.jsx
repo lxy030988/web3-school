@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useAccount, useWriteContract, useChainId } from 'wagmi'
+import { useState, useEffect } from 'react'
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, useChainId } from 'wagmi'
 import { parseEther } from 'viem'
 import { getContractAddress } from '../config/wagmi'
 import { CourseFactoryABI } from '../contracts/abis'
@@ -10,7 +10,9 @@ export default function CreateCoursePage() {
   const navigate = useNavigate()
   const chainId = useChainId()
   const factoryAddress = getContractAddress('CourseFactory', chainId)
-  const { writeContract, isPending } = useWriteContract()
+  const { writeContract, data: hash, isPending, error: writeError } = useWriteContract()
+  const { isLoading: isConfirming, isSuccess, error: confirmError } = useWaitForTransactionReceipt({ hash })
+  const [txStatus, setTxStatus] = useState('')
 
   const [formData, setFormData] = useState({
     name: '',
@@ -31,6 +33,41 @@ export default function CreateCoursePage() {
     { value: 'other', label: '其他' }
   ]
 
+  // 监听交易确认状态
+  useEffect(() => {
+    if (isSuccess) {
+      setTxStatus('课程创建成功!即将跳转...')
+      // 清空表单
+      setFormData({
+        name: '',
+        description: '',
+        category: 'web3',
+        price: '',
+        contentURI: ''
+      })
+      // 延迟跳转
+      setTimeout(() => {
+        navigate('/courses')
+      }, 1500)
+    }
+  }, [isSuccess, navigate])
+
+  useEffect(() => {
+    if (writeError) {
+      setTxStatus('创建失败: ' + writeError.message)
+    } else if (confirmError) {
+      setTxStatus('交易确认失败: ' + confirmError.message)
+    }
+  }, [writeError, confirmError])
+
+  useEffect(() => {
+    if (isPending) {
+      setTxStatus('正在发送交易...')
+    } else if (isConfirming) {
+      setTxStatus('交易已发送,等待确认...')
+    }
+  }, [isPending, isConfirming])
+
   const handleSubmit = async (e) => {
     e.preventDefault()
 
@@ -39,8 +76,11 @@ export default function CreateCoursePage() {
       return
     }
 
+    console.log('Creating course with data:', formData)
+    console.log('Factory address:', factoryAddress)
+
     try {
-      await writeContract({
+      writeContract({
         address: factoryAddress,
         abi: CourseFactoryABI,
         functionName: 'createCourse',
@@ -50,25 +90,12 @@ export default function CreateCoursePage() {
           formData.category,
           parseEther(formData.price),
           formData.contentURI || 'ipfs://default'
-        ]
+        ],
+        gas: 500000n
       })
-
-      // 清空表单
-      setFormData({
-        name: '',
-        description: '',
-        category: 'web3',
-        price: '',
-        contentURI: ''
-      })
-
-      // 延迟跳转,等待交易确认
-      setTimeout(() => {
-        navigate('/courses')
-      }, 2000)
     } catch (error) {
       console.error('Create course failed:', error)
-      alert('创建课程失败: ' + error.message)
+      setTxStatus('创建失败: ' + (error?.message || '未知错误'))
     }
   }
 
@@ -192,22 +219,29 @@ export default function CreateCoursePage() {
               </p>
             </div>
 
+            {/* 状态提示 */}
+            {txStatus && (
+              <div className={`p-4 rounded-xl ${txStatus.includes('失败') ? 'bg-red-500/10 border border-red-500/20 text-red-400' : 'bg-green-500/10 border border-green-500/20 text-green-400'}`}>
+                {txStatus}
+              </div>
+            )}
+
             {/* 提交按钮 */}
             <div className="flex gap-4 pt-4">
               <button
                 type="button"
                 onClick={() => navigate('/courses')}
                 className="flex-1 btn-secondary"
-                disabled={isPending}
+                disabled={isPending || isConfirming}
               >
                 取消
               </button>
               <button
                 type="submit"
                 className="flex-1 btn-primary"
-                disabled={isPending}
+                disabled={isPending || isConfirming}
               >
-                {isPending ? '创建中...' : '创建课程'}
+                {isPending || isConfirming ? '创建中...' : '创建课程'}
               </button>
             </div>
           </div>

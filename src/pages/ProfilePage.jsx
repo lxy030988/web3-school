@@ -1,6 +1,30 @@
 import { useState } from 'react'
 import { useAccount } from 'wagmi'
-import { useUserProfile, useYDToken } from '../hooks/useWeb3'
+import { useUserProfile, useYDToken, usePurchasedCourses, useCourse } from '../hooks/useWeb3'
+
+function PurchasedCourseCard({ courseId }) {
+  const course = useCourse(courseId)
+
+  if (!course) return null
+
+  return (
+    <div className="card">
+      <div className="aspect-video rounded-xl mb-4 bg-gradient-to-br from-purple-600/30 to-pink-600/30 flex items-center justify-center">
+        <span className="text-4xl">📚</span>
+      </div>
+      <div className="flex items-center justify-between mb-2">
+        <span className="px-2 py-1 bg-purple-500/20 text-purple-400 rounded text-xs">{course.category}</span>
+        <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs">已购买</span>
+      </div>
+      <h3 className="text-lg font-semibold mb-2 line-clamp-2">{course.name}</h3>
+      <p className="text-gray-400 text-sm mb-4 line-clamp-2">{course.description}</p>
+      <div className="flex items-center justify-between">
+        <span className="text-purple-400 font-bold">{course.price} YD</span>
+        <button className="btn-primary text-sm py-1 px-3">开始学习</button>
+      </div>
+    </div>
+  )
+}
 
 export default function ProfilePage() {
   const { address, isConnected } = useAccount()
@@ -8,6 +32,7 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false)
   const { updateDisplayName, isUpdating } = useUserProfile()
   const { ydBalance } = useYDToken()
+  const { purchasedCourseIds } = usePurchasedCourses()
 
   const handleSave = async () => {
     if (!name.trim()) return
@@ -78,12 +103,20 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        <h3 className="text-xl font-bold mb-4">我的课程</h3>
-        <div className="text-center py-12 card">
-          <div className="text-4xl mb-4">📚</div>
-          <p className="text-gray-400">还没有购买课程</p>
-          <p className="text-sm text-gray-500 mt-2">前往课程市场购买课程</p>
-        </div>
+        <h3 className="text-xl font-bold mb-4">我的课程 ({purchasedCourseIds.length})</h3>
+        {purchasedCourseIds.length === 0 ? (
+          <div className="text-center py-12 card">
+            <div className="text-4xl mb-4">📚</div>
+            <p className="text-gray-400">还没有购买课程</p>
+            <p className="text-sm text-gray-500 mt-2">前往课程市场购买课程</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {purchasedCourseIds.map(courseId => (
+              <PurchasedCourseCard key={courseId.toString()} courseId={courseId} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )

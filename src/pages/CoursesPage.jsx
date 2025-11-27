@@ -5,7 +5,7 @@ import { useCourses, useCourse } from '../hooks/useWeb3'
 
 function CourseItem({ courseId }) {
   const course = useCourse(courseId)
-  if (!course || !course.isActive) return null
+  if (!courseId || !course || !course.isActive) return null
   return <CourseCard course={course} />
 }
 
@@ -13,8 +13,13 @@ export default function CoursesPage() {
   const [search, setSearch] = useState('')
   const { courseIds } = useCourses()
 
+  // 过滤掉无效的 courseId
+  const validCourseIds = courseIds.filter(id => id != null && id !== undefined)
+
+  console.log('CoursesPage - courseIds:', courseIds, 'valid:', validCourseIds, 'length:', validCourseIds?.length)
+
   // 由于没有课程数据,显示创建课程提示
-  const hasCourses = courseIds && courseIds.length > 0
+  const hasCourses = validCourseIds && validCourseIds.length > 0
 
   return (
     <div className="min-h-screen py-12 px-4">
@@ -38,7 +43,7 @@ export default function CoursesPage() {
 
         {hasCourses ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {courseIds.map(courseId => (
+            {validCourseIds.map(courseId => (
               <CourseItem key={courseId.toString()} courseId={courseId} />
             ))}
           </div>

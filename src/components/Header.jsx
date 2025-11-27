@@ -1,11 +1,13 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useAccount, useConnect, useDisconnect } from 'wagmi'
+import { useYDToken } from '../hooks/useWeb3'
 
 export default function Header() {
   const location = useLocation()
   const { address, isConnected } = useAccount()
   const { connect, connectors } = useConnect()
   const { disconnect } = useDisconnect()
+  const { ydBalance } = useYDToken()
 
   const navLinks = [
     { path: '/', label: '首页' },
@@ -33,6 +35,9 @@ export default function Header() {
 
         {isConnected ? (
           <div className="flex items-center gap-3">
+            <span className="px-3 py-1 bg-green-500/20 rounded-lg text-green-400 text-sm font-medium">
+              {ydBalance || '0'} YD
+            </span>
             <span className="px-3 py-1 bg-purple-500/20 rounded-lg text-purple-400 text-sm">
               {address?.slice(0, 6)}...{address?.slice(-4)}
             </span>
