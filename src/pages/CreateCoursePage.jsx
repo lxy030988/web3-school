@@ -1,19 +1,53 @@
+/**
+ * 创建课程页面组件
+ * 提供表单供用户创建新课程
+ */
+
+// 导入 React 核心功能
 import { useState, useEffect } from 'react'
+
+// 导入 wagmi 相关 hooks
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useChainId } from 'wagmi'
+
+// 导入 viem 工具函数，用于处理以太币单位转换
 import { parseEther } from 'viem'
+
+// 导入配置文件
 import { getContractAddress } from '../config/wagmi'
+
+// 导入合约 ABI
 import { CourseFactoryABI } from '../contracts/abis'
+
+// 导入路由相关组件
 import { useNavigate } from 'react-router-dom'
 
+/**
+ * 创建课程页面组件函数
+ * @returns {JSX.Element} 创建课程页面UI
+ */
 export default function CreateCoursePage() {
+  // 获取钱包连接状态
   const { isConnected } = useAccount()
+  
+  // 获取导航函数
   const navigate = useNavigate()
+  
+  // 获取当前区块链网络 ID
   const chainId = useChainId()
+  
+  // 获取课程工厂合约地址
   const factoryAddress = getContractAddress('CourseFactory', chainId)
+  
+  // 获取写入合约的函数和状态
   const { writeContract, data: hash, isPending, error: writeError } = useWriteContract()
+  
+  // 获取交易确认状态
   const { isLoading: isConfirming, isSuccess, error: confirmError } = useWaitForTransactionReceipt({ hash })
+  
+  // 交易状态提示
   const [txStatus, setTxStatus] = useState('')
 
+  // 表单数据状态
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -22,6 +56,7 @@ export default function CreateCoursePage() {
     contentURI: ''
   })
 
+  // 课程分类选项
   const categories = [
     { value: 'web3', label: 'Web3 开发' },
     { value: 'smart_contract', label: '智能合约' },
@@ -33,11 +68,16 @@ export default function CreateCoursePage() {
     { value: 'other', label: '其他' }
   ]
 
-  // 监听交易确认状态
+  /**
+   * 监听交易确认状态的副作用
+   * 交易成功后显示成功消息并跳转
+   */
   useEffect(() => {
     if (isSuccess) {
+      // 设置成功状态提示
       setTxStatus('课程创建成功!即将跳转...')
-      // 清空表单
+      
+      // 清空表单数据
       setFormData({
         name: '',
         description: '',
@@ -45,41 +85,63 @@ export default function CreateCoursePage() {
         price: '',
         contentURI: ''
       })
-      // 延迟跳转
+      
+      // 延迟跳转到课程市场页面
       setTimeout(() => {
         navigate('/courses')
       }, 1500)
     }
-  }, [isSuccess, navigate])
+  }, [isSuccess, navigate]) // 当交易成功或导航函数变化时执行
 
+  /**
+   * 监听交易错误的副作用
+   * 处理写入和确认阶段的错误
+   */
   useEffect(() => {
     if (writeError) {
+      // 设置写入错误状态提示
       setTxStatus('创建失败: ' + writeError.message)
     } else if (confirmError) {
+      // 设置确认错误状态提示
       setTxStatus('交易确认失败: ' + confirmError.message)
     }
-  }, [writeError, confirmError])
+  }, [writeError, confirmError]) // 当错误变化时执行
 
+  /**
+   * 监听交易状态的副作用
+   * 根据交易状态显示不同的提示
+   */
   useEffect(() => {
     if (isPending) {
+      // 交易正在发送中
       setTxStatus('正在发送交易...')
     } else if (isConfirming) {
+      // 交易已发送，等待确认
       setTxStatus('交易已发送,等待确认...')
     }
-  }, [isPending, isConfirming])
+  }, [isPending, isConfirming]) // 当交易状态变化时执行
 
+  /**
+   * 处理表单提交
+   * 调用智能合约创建课程
+   * @param {Event} e - 表单提交事件
+   */
   const handleSubmit = async (e) => {
+    // 阻止表单默认提交行为
     e.preventDefault()
 
+    // 验证必填字段
     if (!formData.name || !formData.description || !formData.price) {
       alert('请填写所有必填字段')
       return
     }
 
+    // 调试日志
     console.log('Creating course with data:', formData)
     console.log('Factory address:', factoryAddress)
 
     try {
+      // 调用智能合约创建课程
       writeContract({
         address: factoryAddress,
         abi: CourseFactoryABI,
@@ -88,19 +150,27 @@ export default function CreateCoursePage() {
           formData.name,
           formData.description,
           formData.category,
-          parseEther(formData.price),
-          formData.contentURI || 'ipfs://default'
+          parseEther(formData.price), // 将价格转换为 wei
+          formData.contentURI || 'ipfs://default' // 如果没有提供内容URI，使用默认值
         ],
-        gas: 500000n
+        gas: 500000n // 设置 gas 限制
       })
     } catch (error) {
+      // 错误处理和日志记录
       console.error('Create course failed:', error)
       setTxStatus('创建失败: ' + (error?.message || '未知错误'))
     }
   }
 
+  /**
+   * 处理表单输入变化
+   * 更新表单数据状态
+   * @param {Event} e - 输入事件
+   */
   const handleChange = (e) => {
+    // 获取输入名称和值
     const { name, value } = e.target
+    // 更新表单数据
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 

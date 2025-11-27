@@ -1,10 +1,26 @@
+/**
+ * 首页组件
+ * 展示平台介绍和主要功能
+ */
+
+// 导入路由相关组件
 import { Link } from 'react-router-dom'
+
+// 导入 wagmi 钱包相关 hooks
 import { useAccount, useConnect } from 'wagmi'
 
+/**
+ * 首页组件函数
+ * @returns {JSX.Element} 首页UI
+ */
 export default function HomePage() {
+  // 获取钱包连接状态
   const { isConnected } = useAccount()
+  
+  // 获取钱包连接相关函数和连接器
   const { connect, connectors } = useConnect()
 
+  // 平台主要功能列表
   const features = [
     { icon: '🎓', title: '去中心化课程', desc: '课程存储在区块链上，永不丢失' },
     { icon: '💰', title: 'YD 代币支付', desc: '使用平台代币购买课程' },

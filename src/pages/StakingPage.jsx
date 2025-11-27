@@ -2,9 +2,16 @@ import { useState, useEffect } from 'react'
 import { useAccount, useWaitForTransactionReceipt } from 'wagmi'
 import { useAaveStaking, useYDToken } from '../hooks/useWeb3'
 
+/**
+ * StakingPage - 质押页面组件
+ * 提供YD和ETH的质押、提取功能，以及收益管理功能
+ */
 export default function StakingPage() {
+  // 钱包连接状态
   const { isConnected, address } = useAccount()
+  // 金额输入状态
   const [amount, setAmount] = useState('')
+  // 操作类型状态：'deposit'质押 或 'withdraw'提取
   const [tab, setTab] = useState('deposit')
   const [assetType, setAssetType] = useState('YD') // 'YD' 或 'ETH'
   const [needsApproval, setNeedsApproval] = useState(false)
@@ -34,7 +41,11 @@ export default function StakingPage() {
 
   const [lastProcessedTx, setLastProcessedTx] = useState(null)
 
-  const { isSuccess: isTransactionSuccess, isError: isTransactionError, error: transactionError } = useWaitForTransactionReceipt({
+  const {
+    isSuccess: isTransactionSuccess,
+    isError: isTransactionError,
+    error: transactionError
+  } = useWaitForTransactionReceipt({
     hash: txHash
   })
 
@@ -78,7 +89,16 @@ export default function StakingPage() {
 
       alert(tab === 'deposit' ? '✅ 质押成功!' : '✅ 提取成功!')
     }
-  }, [isTransactionSuccess, tab, txHash, lastProcessedTx, refetchStaked, refetchAllowance, refetchRewards, refetchBalance])
+  }, [
+    isTransactionSuccess,
+    tab,
+    txHash,
+    lastProcessedTx,
+    refetchStaked,
+    refetchAllowance,
+    refetchRewards,
+    refetchBalance
+  ])
 
   // 交易失败处理
   useEffect(() => {
@@ -125,7 +145,9 @@ export default function StakingPage() {
   return (
     <div className="min-h-screen py-12 px-4">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold mb-8">质押<span className="gradient-text">理财</span></h1>
+        <h1 className="text-4xl font-bold mb-8">
+          质押<span className="gradient-text">理财</span>
+        </h1>
 
         <div className="grid md:grid-cols-5 gap-6 mb-8">
           <div className="card">
@@ -224,14 +246,18 @@ export default function StakingPage() {
           <div className="flex gap-2 mb-6">
             <button
               onClick={() => setAssetType('YD')}
-              className={`flex-1 py-2 rounded-lg text-sm ${assetType === 'YD' ? 'bg-blue-500/30 text-blue-300' : 'bg-white/5 text-gray-400'}`}
+              className={`flex-1 py-2 rounded-lg text-sm ${
+                assetType === 'YD' ? 'bg-blue-500/30 text-blue-300' : 'bg-white/5 text-gray-400'
+              }`}
               disabled={isPending}
             >
               💎 YD 代币
             </button>
             <button
               onClick={() => setAssetType('ETH')}
-              className={`flex-1 py-2 rounded-lg text-sm ${assetType === 'ETH' ? 'bg-purple-500/30 text-purple-300' : 'bg-white/5 text-gray-400'}`}
+              className={`flex-1 py-2 rounded-lg text-sm ${
+                assetType === 'ETH' ? 'bg-purple-500/30 text-purple-300' : 'bg-white/5 text-gray-400'
+              }`}
               disabled={isPending}
             >
               🌐 ETH (Aave)
@@ -250,9 +276,12 @@ export default function StakingPage() {
           <div className="mb-4">
             <label className="text-sm text-gray-400 mb-2 block">
               {tab === 'deposit'
-                ? (assetType === 'YD' ? `可用余额: ${parseFloat(ydBalance || 0).toFixed(2)} YD` : `ETH 余额: 查看钱包`)
-                : (assetType === 'YD' ? `已质押: ${parseFloat(stakedYDAmount || 0).toFixed(2)} YD` : `已质押: ${parseFloat(stakedETHAmount || 0).toFixed(4)} ETH`)
-              }
+                ? assetType === 'YD'
+                  ? `可用余额: ${parseFloat(ydBalance || 0).toFixed(2)} YD`
+                  : `ETH 余额: 查看钱包`
+                : assetType === 'YD'
+                ? `已质押: ${parseFloat(stakedYDAmount || 0).toFixed(2)} YD`
+                : `已质押: ${parseFloat(stakedETHAmount || 0).toFixed(4)} ETH`}
             </label>
             <input
               type="number"
@@ -267,23 +296,18 @@ export default function StakingPage() {
 
           {/* 操作按钮 */}
           {tab === 'deposit' && assetType === 'YD' && needsApproval ? (
-            <button
-              onClick={handleApprove}
-              className="w-full btn-primary"
-              disabled={isPending}
-            >
+            <button onClick={handleApprove} className="w-full btn-primary" disabled={isPending}>
               {isPending ? '授权中...' : '授权质押'}
             </button>
           ) : (
-            <button
-              onClick={handleAction}
-              className="w-full btn-primary"
-              disabled={isPending}
-            >
+            <button onClick={handleAction} className="w-full btn-primary" disabled={isPending}>
               {isPending
-                ? (tab === 'deposit' ? '质押中...' : '提取中...')
-                : (tab === 'deposit' ? `确认质押 ${assetType}` : `确认提取 ${assetType}`)
-              }
+                ? tab === 'deposit'
+                  ? '质押中...'
+                  : '提取中...'
+                : tab === 'deposit'
+                ? `确认质押 ${assetType}`
+                : `确认提取 ${assetType}`}
             </button>
           )}
         </div>

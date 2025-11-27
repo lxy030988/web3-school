@@ -1,62 +1,106 @@
+/**
+ * 课程卡片组件
+ * 显示课程信息并提供购买功能
+ */
+
+// 导入 React 核心功能
 import { useState, useEffect } from 'react'
+
+// 导入自定义 Web3 hooks
 import { useCoursePurchase, useYDToken, useHasPurchased } from '../hooks/useWeb3'
+
+// 导入 wagmi 交易状态监听 hook
 import { useWaitForTransactionReceipt } from 'wagmi'
 
+/**
+ * 课程卡片组件
+ * @param {Object} course - 课程对象，包含课程详情
+ * @returns {JSX.Element} 课程卡片UI
+ */
 export default function CourseCard({ course }) {
+  // 从课程对象中解构所需属性
   const { id, name, description, category, price, totalStudents = 0 } = course
+  
+  // 控制购买对话框的显示状态
   const [showPurchase, setShowPurchase] = useState(false)
+  
+  // 控制是否需要授权的状态
   const [needsApproval, setNeedsApproval] = useState(false)
+  
+  // 购买课程相关的 hook
   const { purchaseCourse, isPurchasing, purchaseHash } = useCoursePurchase()
+  
+  // YD代币相关的 hook
   const { approve, isPending: isApproving, allowance } = useYDToken()
+  
+  // 检查是否已购买课程的 hook
   const { hasPurchased, refetch: refetchPurchaseStatus } = useHasPurchased(id)
 
-  // 使用 hook 返回的实时状态
+  // 使用 hook 返回的实时状态判断是否已购买
   const isPurchased = hasPurchased
 
-  // 监听购买成功
+  // 监听购买交易是否成功
   const { isSuccess: isPurchaseSuccess } = useWaitForTransactionReceipt({ hash: purchaseHash })
 
-  // 检查是否需要授权
+  // 检查是否需要授权的副作用
   useEffect(() => {
     if (allowance && price) {
+      // 将字符串转换为数字进行比较
       const priceNum = parseFloat(price)
       const allowanceNum = parseFloat(allowance)
+      // 如果授权额度小于价格，则需要授权
       setNeedsApproval(allowanceNum < priceNum)
     }
-  }, [allowance, price])
+  }, [allowance, price]) // 当授权额度或价格变化时重新计算
 
-  // 购买成功后关闭对话框、刷新状态并显示提示
+  // 购买成功后的处理副作用
   useEffect(() => {
     if (isPurchaseSuccess) {
+      // 关闭购买对话框
       setShowPurchase(false)
       // 立即刷新购买状态
       setTimeout(() => {
         refetchPurchaseStatus()
       }, 1000) // 等待1秒让区块确认
+      // 显示成功提示
       alert('🎉 购买成功!课程已添加到"个人中心"')
     }
-  }, [isPurchaseSuccess, refetchPurchaseStatus])
+  }, [isPurchaseSuccess, refetchPurchaseStatus]) // 当购买成功或刷新函数变化时执行
 
+  /**
+   * 处理授权操作
+   * 授权智能合约使用用户的代币
+   */
   const handleApprove = () => {
+    // 调试日志
     console.log('=== Approve Debug ===')
     console.log('Approving amount: 10000')
     try {
+      // 调用授权函数，授权额度为10000
       approve('10000')
       console.log('Approve function called')
     } catch (error) {
+      // 错误处理和日志记录
       console.error('Approve error:', error)
       console.error('Error details:', JSON.stringify(error, null, 2))
     }
   }
 
+  /**
+   * 处理购买课程操作
+   * 调用智能合约购买指定课程
+   */
   const handlePurchase = () => {
+    // 调试日志
     console.log('=== Purchase Debug ===')
     console.log('Course ID:', id)
     console.log('Course ID type:', typeof id)
     try {
+      // 调用购买课程函数
       purchaseCourse(id)
       console.log('Purchase function called')
     } catch (error) {
+      // 错误处理和日志记录
       console.error('Purchase error:', error)
       console.error('Error details:', JSON.stringify(error, null, 2))
     }

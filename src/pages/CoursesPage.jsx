@@ -1,6 +1,18 @@
+/**
+ * 课程市场页面组件
+ * 显示所有可用课程，并提供搜索和创建功能
+ */
+
+// 导入 React 核心功能
 import { useState } from 'react'
+
+// 导入路由相关组件
 import { Link } from 'react-router-dom'
+
+// 导入 wagmi 钱包相关 hooks
 import { useAccount } from 'wagmi'
+
+// 导入组件和自定义 hooks
 import CourseCard from '../components/CourseCard'
 import { useCourses, useCourse } from '../hooks/useWeb3'
 

@@ -1,5 +1,15 @@
+/**
+ * 个人资料页面组件
+ * 显示用户信息、购买的课程和代币购买功能
+ */
+
+// 导入 React 核心功能
 import { useState, useEffect } from 'react'
+
+// 导入 wagmi 相关 hooks
 import { useAccount, useWaitForTransactionReceipt } from 'wagmi'
+
+// 导入自定义 hooks
 import { useUserProfile, useYDToken, usePurchasedCourses, useCourse } from '../hooks/useWeb3'
 
 function PurchasedCourseCard({ courseId }) {
@@ -60,9 +70,18 @@ export default function ProfilePage() {
     }
   }, [isTransactionSuccess, txHash, lastProcessedTx, refetchBalance])
 
+  /**
+   * 处理购买代币的函数
+   * 当用户点击购买按钮时触发此函数
+   * 它会验证输入的ETH数量是否有效，然后执行购买操作
+   */
   const handleBuyTokens = () => {
+    // 检查输入的ETH金额是否存在或者是否小于等于0
+    // 如果条件满足，则直接返回，不执行后续操作
     if (!ethAmount || parseFloat(ethAmount) <= 0) return
+    // 调用buyTokens函数，传入用户输入的ETH金额
     buyTokens(ethAmount)
+    // 购买完成后，清空ETH输入框
     setEthAmount('')
   }
 
@@ -106,18 +125,10 @@ export default function ProfilePage() {
                     placeholder="输入名称"
                     disabled={isUpdating}
                   />
-                  <button
-                    onClick={handleSave}
-                    className="btn-primary py-2 px-4"
-                    disabled={isUpdating}
-                  >
+                  <button onClick={handleSave} className="btn-primary py-2 px-4" disabled={isUpdating}>
                     {isUpdating ? '保存中...' : '保存'}
                   </button>
-                  <button
-                    onClick={() => setIsEditing(false)}
-                    className="btn-secondary py-2 px-4"
-                    disabled={isUpdating}
-                  >
+                  <button onClick={() => setIsEditing(false)} className="btn-secondary py-2 px-4" disabled={isUpdating}>
                     取消
                   </button>
                 </div>

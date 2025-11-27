@@ -1,17 +1,44 @@
+/**
+ * 代币购买组件
+ * 提供使用 ETH 购买 YD 代币的界面和功能
+ */
+
+// 导入 React 核心功能
 import { useState } from 'react'
+
+// 导入自定义 Web3 hooks
 import { useYDToken } from '../hooks/useWeb3'
 
+/**
+ * 代币购买组件函数
+ * @param {Function} onClose - 关闭组件的回调函数
+ * @returns {JSX.Element} 代币购买UI
+ */
 export default function TokenPurchase({ onClose }) {
+  // 存储用户输入的 ETH 数量
   const [ethAmount, setEthAmount] = useState('')
+  
+  // 获取购买代币相关的函数和状态
   const { buyTokens, isBuying } = useYDToken()
+  
+  // 计算可获得的 YD 代币数量（1 ETH = 1000 YD，即 0.001 ETH = 1 YD）
   const ydAmount = ethAmount ? (parseFloat(ethAmount) / 0.001).toFixed(2) : '0'
 
+  /**
+   * 处理购买代币操作
+   * 调用智能合约购买 YD 代币
+   */
   const handleBuy = async () => {
+    // 验证输入的 ETH 数量是否有效
     if (!ethAmount || parseFloat(ethAmount) <= 0) return
+    
     try {
+      // 调用购买函数
       await buyTokens(ethAmount)
+      // 购买成功后关闭组件
       onClose()
     } catch (error) {
+      // 错误处理和日志记录
       console.error('Purchase failed:', error)
     }
   }

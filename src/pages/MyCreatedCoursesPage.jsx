@@ -1,12 +1,33 @@
+/**
+ * 我的课程页面组件
+ * 显示当前用户创建的所有课程
+ */
+
+// 导入 React 核心功能
 import { useState } from 'react'
+
+// 导入路由相关组件
 import { Link } from 'react-router-dom'
+
+// 导入 wagmi 钱包相关 hooks
 import { useAccount } from 'wagmi'
+
+// 导入自定义 hooks
 import { useCourses, useCourse } from '../hooks/useWeb3'
 
+/**
+ * 已创建课程项组件
+ * 显示单个用户创建的课程卡片
+ * @param {Object} props - 组件属性
+ * @param {string|number} props.courseId - 课程 ID
+ * @param {string} props.currentUserAddress - 当前用户地址
+ * @returns {JSX.Element|null} 课程卡片或 null
+ */
 function CreatedCourseItem({ courseId, currentUserAddress }) {
+  // 获取课程详细信息
   const course = useCourse(courseId)
 
-  // 只显示当前用户创建的课程
+  // 只显示当前用户创建的激活课程
   if (!courseId || !course || !course.isActive) return null
   if (!currentUserAddress || course.author?.toLowerCase() !== currentUserAddress.toLowerCase()) return null
 

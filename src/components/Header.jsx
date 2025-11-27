@@ -1,14 +1,38 @@
+/**
+ * 网站头部组件
+ * 显示网站标题、导航菜单和钱包连接状态
+ */
+
+// 导入路由相关组件
 import { Link, useLocation } from 'react-router-dom'
+
+// 导入 wagmi 钱包相关 hooks
 import { useAccount, useConnect, useDisconnect } from 'wagmi'
+
+// 导入自定义 Web3 hooks
 import { useYDToken } from '../hooks/useWeb3'
 
+/**
+ * 头部组件函数
+ * @returns {JSX.Element} 头部UI
+ */
 export default function Header() {
+  // 获取当前路由位置
   const location = useLocation()
+  
+  // 获取钱包账户信息
   const { address, isConnected } = useAccount()
+  
+  // 获取钱包连接相关函数和连接器
   const { connect, connectors } = useConnect()
+  
+  // 获取断开连接函数
   const { disconnect } = useDisconnect()
+  
+  // 获取YD代币余额
   const { ydBalance } = useYDToken()
 
+  // 导航链接配置
   const navLinks = [
     { path: '/', label: '首页' },
     { path: '/courses', label: '课程市场' },
