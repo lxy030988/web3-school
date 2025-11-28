@@ -436,5 +436,41 @@ export const AaveStakingABI = [
     "stateMutability": "view",
     // 类型：函数
     "type": "function"
+  },
+  {
+    // 函数输入参数：无
+    "inputs": [],
+    // 函数名称：查询平台可提取的收益（20%）
+    "name": "getPlatformEarnings",
+    // 函数返回值：平台可提取的ETH数量
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    // 状态可变性：只读，不修改状态
+    "stateMutability": "view",
+    // 类型：函数
+    "type": "function"
+  },
+  {
+    // 函数输入参数：无
+    "inputs": [],
+    // 函数名称：平台提取20%的Aave收益（仅owner）
+    "name": "withdrawPlatformEarnings",
+    // 函数返回值：无
+    "outputs": [],
+    // 状态可变性：非支付函数，修改状态但不接收以太币
+    "stateMutability": "nonpayable",
+    // 类型：函数
+    "type": "function"
+  },
+  {
+    // 函数输入参数：无
+    "inputs": [],
+    // 函数名称：获取合约所有者地址
+    "name": "owner",
+    // 函数返回值：所有者地址
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    // 状态可变性：只读，不修改状态
+    "stateMutability": "view",
+    // 类型：函数
+    "type": "function"
   }
 ]

@@ -646,3 +646,63 @@ export function useYDTokenOwner() {
       })
   }
 }
+
+/**
+ * AaveStaking Owner 管理 Hook
+ * 提供 Aave 质押合约 owner 专属功能：查看和提取平台收益（20%）
+ * @returns {Object} 包含 owner 相关状态和函数的对象
+ */
+export function useAaveStakingOwner() {
+  // 获取当前连接的钱包地址
+  const { address } = useAccount()
+
+  // 获取当前区块链网络 ID
+  const chainId = useChainId()
+
+  // 获取 AaveStaking 合约地址
+  const stakingAddress = getContractAddress('AaveStaking', chainId)
+
+  // 查询合约 owner 地址
+  const { data: ownerAddress } = useReadContract({
+    address: stakingAddress,
+    abi: AaveStakingABI,
+    functionName: 'owner',
+    enabled: !!stakingAddress
+  })
+
+  // 查询平台可提取的收益（20%）
+  const { data: platformEarnings, refetch: refetchEarnings } = useReadContract({
+    address: stakingAddress,
+    abi: AaveStakingABI,
+    functionName: 'getPlatformEarnings',
+    enabled: !!stakingAddress,
+    watch: true // 自动监听变化
+  })
+
+  // 获取写入合约的函数和状态
+  const { writeContract, data: txHash, isPending } = useWriteContract()
+
+  // 判断当前用户是否为 owner
+  const isOwner = address && ownerAddress && address.toLowerCase() === ownerAddress.toLowerCase()
+
+  // 返回 owner 相关的状态和函数
+  return {
+    // 状态数据
+    isOwner, // 当前用户是否为 owner
+    ownerAddress, // owner 地址
+    platformEarnings: platformEarnings ? formatEther(platformEarnings) : '0', // 平台可提取的收益
+    isPending, // 交易是否正在处理中
+    txHash, // 最新交易的哈希值
+
+    // 刷新函数
+    refetchEarnings, // 刷新收益数据
+
+    // Owner 操作
+    withdrawPlatformEarnings: () => // 提取平台 20% 收益
+      writeContract({
+        address: stakingAddress,
+        abi: AaveStakingABI,
+        functionName: 'withdrawPlatformEarnings'
+      })
+  }
+}

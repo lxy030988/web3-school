@@ -10,7 +10,7 @@ import { useState, useEffect } from 'react'
 import { useAccount, useWaitForTransactionReceipt } from 'wagmi'
 
 // 导入自定义 hooks
-import { useUserProfile, useYDToken, usePurchasedCourses, useCourse, useYDTokenOwner } from '../hooks/useWeb3'
+import { useUserProfile, useYDToken, usePurchasedCourses, useCourse, useYDTokenOwner, useAaveStakingOwner } from '../hooks/useWeb3'
 
 function PurchasedCourseCard({ courseId }) {
   const course = useCourse(courseId)
@@ -59,6 +59,16 @@ export default function ProfilePage() {
   // Owner 专属功能
   const { isOwner, contractBalance, withdraw, isPending: isWithdrawing, txHash: withdrawTxHash, refetchBalance: refetchContractBalance } = useYDTokenOwner()
 
+  // Aave 质押 Owner 专属功能
+  const {
+    isOwner: isAaveOwner,
+    platformEarnings,
+    withdrawPlatformEarnings,
+    isPending: isWithdrawingAave,
+    txHash: withdrawAaveTxHash,
+    refetchEarnings
+  } = useAaveStakingOwner()
+
   // 监听 YD 购买交易
   const { isSuccess: isYDTransactionSuccess } = useWaitForTransactionReceipt({
     hash: ydTxHash
@@ -72,6 +82,11 @@ export default function ProfilePage() {
   // 监听 ETH 提取交易
   const { isSuccess: isWithdrawSuccess } = useWaitForTransactionReceipt({
     hash: withdrawTxHash
+  })
+
+  // 监听 Aave 平台收益提取交易
+  const { isSuccess: isWithdrawAaveSuccess } = useWaitForTransactionReceipt({
+    hash: withdrawAaveTxHash
   })
 
   // 同步合约中的 displayName 到本地 state
@@ -140,6 +155,25 @@ export default function ProfilePage() {
       alert('✅ ETH 提取成功!')
     }
   }, [isWithdrawSuccess, withdrawTxHash, refetchContractBalance])
+
+  // Aave 平台收益提取成功后刷新
+  useEffect(() => {
+    if (isWithdrawAaveSuccess && withdrawAaveTxHash) {
+      console.log('✅ Aave platform earnings withdraw successful! Hash:', withdrawAaveTxHash)
+
+      // 刷新平台收益
+      const refreshEarnings = () => {
+        console.log('🔄 Refreshing platform earnings...')
+        refetchEarnings()
+      }
+
+      refreshEarnings()
+      setTimeout(refreshEarnings, 1000)
+      setTimeout(refreshEarnings, 2000)
+
+      alert('✅ Aave 平台收益提取成功!')
+    }
+  }, [isWithdrawAaveSuccess, withdrawAaveTxHash, refetchEarnings])
 
   /**
    * 处理购买代币的函数
@@ -257,7 +291,7 @@ export default function ProfilePage() {
           <div className="card mb-8 border-2 border-yellow-500/30">
             <div className="flex items-center gap-2 mb-4">
               <span className="text-2xl">👑</span>
-              <h3 className="text-lg font-semibold text-yellow-400">Owner 专属功能</h3>
+              <h3 className="text-lg font-semibold text-yellow-400">Owner 专属功能 - YDToken</h3>
             </div>
             <p className="text-gray-400 text-sm mb-4">您是 YDToken 合约的所有者，可以提取合约中的 ETH</p>
             <div className="bg-purple-500/10 rounded-lg p-4 mb-4">
@@ -276,6 +310,35 @@ export default function ProfilePage() {
             {parseFloat(contractBalance || 0) === 0 && (
               <p className="text-gray-500 text-xs mt-2 text-center">合约中没有 ETH 可提取</p>
             )}
+          </div>
+        )}
+
+        {isAaveOwner && (
+          <div className="card mb-8 border-2 border-green-500/30">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-2xl">💰</span>
+              <h3 className="text-lg font-semibold text-green-400">Owner 专属功能 - Aave 质押平台收益</h3>
+            </div>
+            <p className="text-gray-400 text-sm mb-4">您是 AaveStaking 合约的所有者，可以提取平台 20% 的 Aave 收益</p>
+            <div className="bg-green-500/10 rounded-lg p-4 mb-4">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400">平台可提取收益 (20%):</span>
+                <span className="text-2xl font-bold text-green-400">{parseFloat(platformEarnings || 0).toFixed(6)} ETH</span>
+              </div>
+            </div>
+            <button
+              onClick={withdrawPlatformEarnings}
+              disabled={isWithdrawingAave || parseFloat(platformEarnings || 0) === 0}
+              className="btn-primary w-full"
+            >
+              {isWithdrawingAave ? '提取中...' : '提取平台收益'}
+            </button>
+            {parseFloat(platformEarnings || 0) === 0 && (
+              <p className="text-gray-500 text-xs mt-2 text-center">暂无平台收益可提取</p>
+            )}
+            <p className="text-gray-500 text-xs mt-2 text-center">
+              💡 用户获得 80% 的 Aave 收益，平台保留 20%
+            </p>
           </div>
         )}
 

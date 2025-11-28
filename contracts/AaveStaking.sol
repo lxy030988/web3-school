@@ -223,20 +223,21 @@ contract AaveStaking is Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice 从 Aave 提取 ETH
+     * @notice 从 Aave 提取 ETH（包含本金和 80% 收益）
      * @dev 通过 Aave 的 WETH Gateway 提取 ETH
      *
-     * @param amount 提取数量（单位：wei）
+     * @param amount 要提取的本金数量（单位：wei）
      *
      * 执行流程：
      * 1. 检查用户质押余额是否足够
-     * 2. 调用 Aave WETH Gateway 提取 ETH
-     * 3. ETH 会直接转到用户钱包
-     * 4. 更新质押数据
+     * 2. 计算用户的 Aave 收益份额（80%）
+     * 3. 从 Aave 提取本金 + 收益
+     * 4. ETH 会直接转到用户钱包
+     * 5. 更新质押数据
      *
-     * ⚠️ 注意：
-     * - 提取的 ETH 可能略多于存入金额（包含 Aave 收益）
-     * - 但合约只记录用户存入的金额，多余的收益归用户
+     * 收益分配：
+     * - 用户获得：本金 + 80% 的 Aave 收益
+     * - 平台保留：20% 的 Aave 收益（owner 可提取）
      *
      * @custom:security 使用 nonReentrant 防止重入攻击
      */
@@ -246,15 +247,34 @@ contract AaveStaking is Ownable, ReentrancyGuard {
             "Insufficient ETH balance"
         );
 
+        // 计算 Aave 总收益
+        uint256 aWETHBalance = IERC20(aWETH).balanceOf(address(this));
+        uint256 totalAaveEarnings = 0;
+        if (aWETHBalance > totalETHStaked) {
+            totalAaveEarnings = aWETHBalance - totalETHStaked;
+        }
+
+        // 计算用户的收益份额（按质押比例）
+        uint256 userShare = 0;
+        if (totalETHStaked > 0 && totalAaveEarnings > 0) {
+            // 用户份额 = (用户质押金额 / 总质押) * 总收益
+            userShare = (stakes[msg.sender].ethStaked * totalAaveEarnings) / totalETHStaked;
+        }
+
+        // 用户获得 80% 的收益
+        uint256 userEarnings = (userShare * 80) / 100;
+
+        // 实际提取金额 = 本金 + 80% 收益
+        uint256 actualWithdrawAmount = amount + (userEarnings * amount) / stakes[msg.sender].ethStaked;
+
         // 更新质押数据（先扣除，防止重入）
         stakes[msg.sender].ethStaked -= amount;
         totalETHStaked -= amount;
 
         // 从 Aave 提取 ETH 到用户地址
-        // 注意：Aave 会从合约的 aWETH 余额中扣除，并发送 ETH 给用户
-        IWETHGateway(WETH_GATEWAY).withdrawETH(AAVE_POOL, amount, msg.sender);
+        IWETHGateway(WETH_GATEWAY).withdrawETH(AAVE_POOL, actualWithdrawAmount, msg.sender);
 
-        emit Withdrawn(msg.sender, amount, "ETH");
+        emit Withdrawn(msg.sender, actualWithdrawAmount, "ETH");
 
         // 如果全部提取，清空用户记录
         if (
@@ -292,6 +312,46 @@ contract AaveStaking is Ownable, ReentrancyGuard {
             return aWETHBalance - totalETHStaked;
         }
         return 0;
+    }
+
+    /**
+     * @notice 查询平台可提取的收益（20%）
+     * @dev 计算所有 Aave 收益的 20%
+     * @return 平台可提取的 ETH 数量
+     */
+    function getPlatformEarnings() external view returns (uint256) {
+        uint256 aWETHBalance = IERC20(aWETH).balanceOf(address(this));
+        if (aWETHBalance > totalETHStaked) {
+            uint256 totalEarnings = aWETHBalance - totalETHStaked;
+            return (totalEarnings * 20) / 100;
+        }
+        return 0;
+    }
+
+    /**
+     * @notice 平台提取 20% 的 Aave 收益（仅 owner）
+     * @dev 提取所有 Aave 收益的 20% 作为平台费用
+     *
+     * 执行流程：
+     * 1. 计算 Aave 总收益
+     * 2. 计算 20% 平台费用
+     * 3. 从 Aave 提取到 owner 地址
+     *
+     * @custom:security 使用 nonReentrant 防止重入攻击，onlyOwner 限制权限
+     */
+    function withdrawPlatformEarnings() external onlyOwner nonReentrant {
+        uint256 aWETHBalance = IERC20(aWETH).balanceOf(address(this));
+        require(aWETHBalance > totalETHStaked, "No earnings available");
+
+        uint256 totalEarnings = aWETHBalance - totalETHStaked;
+        uint256 platformEarnings = (totalEarnings * 20) / 100;
+
+        require(platformEarnings > 0, "No platform earnings");
+
+        // 从 Aave 提取到 owner 地址
+        IWETHGateway(WETH_GATEWAY).withdrawETH(AAVE_POOL, platformEarnings, owner());
+
+        emit Withdrawn(owner(), platformEarnings, "ETH");
     }
 
     // ============ 外部函数 - 收益管理 ============
