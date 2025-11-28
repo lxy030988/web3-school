@@ -68,6 +68,30 @@ export const YDTokenABI = [
     "stateMutability": "view",
     // 类型：函数
     "type": "function"
+  },
+  {
+    // 函数输入参数：无
+    "inputs": [],
+    // 函数名称：获取合约所有者地址
+    "name": "owner",
+    // 函数返回值：所有者地址
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    // 状态可变性：只读，不修改状态
+    "stateMutability": "view",
+    // 类型：函数
+    "type": "function"
+  },
+  {
+    // 函数输入参数：无
+    "inputs": [],
+    // 函数名称：提取合约中的 ETH（仅所有者）
+    "name": "withdraw",
+    // 函数返回值：无
+    "outputs": [],
+    // 状态可变性：非支付函数，修改状态但不接收以太币
+    "stateMutability": "nonpayable",
+    // 类型：函数
+    "type": "function"
   }
 ]
 
@@ -268,12 +292,45 @@ export const CourseMarketABI = [
  * 包含与用户资料合约交互所需的所有函数定义
  */
 export const UserProfileABI = [
-  // 设置用户显示名称函数，需要字符串和签名字节作为参数
-  "function setDisplayName(string, bytes)",
-  // 获取指定地址的显示名称，只读函数，返回字符串
-  "function getDisplayName(address) view returns (string)",
-  // 获取指定地址的签名随机数，用于防止重放攻击，只读函数，返回无符号整数
-  "function getSignatureNonce(address) view returns (uint256)",
+  {
+    // 函数输入参数：显示名称和签名
+    "inputs": [
+      { "internalType": "string", "name": "name", "type": "string" },
+      { "internalType": "bytes", "name": "signature", "type": "bytes" }
+    ],
+    // 函数名称：设置显示名称
+    "name": "setDisplayName",
+    // 函数返回值：无
+    "outputs": [],
+    // 状态可变性：非支付函数，修改状态但不接收以太币
+    "stateMutability": "nonpayable",
+    // 类型：函数
+    "type": "function"
+  },
+  {
+    // 函数输入参数：用户地址
+    "inputs": [{ "internalType": "address", "name": "user", "type": "address" }],
+    // 函数名称：获取显示名称
+    "name": "getDisplayName",
+    // 函数返回值：显示名称字符串
+    "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
+    // 状态可变性：只读，不修改状态
+    "stateMutability": "view",
+    // 类型：函数
+    "type": "function"
+  },
+  {
+    // 函数输入参数：用户地址
+    "inputs": [{ "internalType": "address", "name": "user", "type": "address" }],
+    // 函数名称：获取签名随机数
+    "name": "getSignatureNonce",
+    // 函数返回值：nonce值
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    // 状态可变性：只读，不修改状态
+    "stateMutability": "view",
+    // 类型：函数
+    "type": "function"
+  }
 ]
 
 /**

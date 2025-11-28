@@ -4,7 +4,7 @@
  */
 
 // 导入 wagmi 相关 hooks
-import { useAccount, useReadContract, useWriteContract, useSignMessage, useChainId } from 'wagmi'
+import { useAccount, useReadContract, useWriteContract, useSignMessage, useChainId, useBalance } from 'wagmi'
 
 // 导入 viem 工具函数，用于处理以太币单位转换
 import { parseEther, formatEther } from 'viem'
@@ -307,41 +307,53 @@ export function useUserProfile() {
   const profileAddress = getContractAddress('UserProfile', chainId)
 
   // 查询用户显示名称
-  const { data: displayName, refetch: refetchDisplayName } = useReadContract({
+  const {
+    data: displayName,
+    refetch: refetchDisplayName,
+    isError: displayNameError,
+    isLoading: displayNameLoading
+  } = useReadContract({
     address: profileAddress,
     abi: UserProfileABI,
     functionName: 'getDisplayName',
     args: [address], // 用户地址
     enabled: !!address && !!profileAddress, // 仅在有地址和合约地址时启用查询
-    watch: true, // 自动监听变化
-    query: {
-      refetchInterval: 3000, // 每3秒刷新一次
-      gcTime: 0, // 不缓存
-      staleTime: 0 // 立即标记为过期
-    }
+    watch: true // 自动监听变化
   })
 
   // 查询用户签名随机数，用于防止重放攻击
-  const { data: nonce, refetch: refetchNonce } = useReadContract({
+  const {
+    data: nonce,
+    refetch: refetchNonce,
+    isError: nonceError,
+    isLoading: nonceLoading,
+    error: nonceErrorDetail
+  } = useReadContract({
     address: profileAddress,
     abi: UserProfileABI,
     functionName: 'getSignatureNonce',
     args: [address], // 用户地址
-    enabled: !!address && !!profileAddress, // 仅在有地址和合约地址时启用查询
-    query: {
-      refetchInterval: 3000, // 每3秒刷新一次
-      gcTime: 0, // 不缓存
-      staleTime: 0 // 立即标记为过期
-    }
+    enabled: !!address && !!profileAddress // 仅在有地址和合约地址时启用查询
   })
 
   // 调试日志
   console.log('🔍 useUserProfile:', {
+    chainId,
     profileAddress,
     address,
     nonce: nonce?.toString(),
-    displayName
+    displayName,
+    nonceRaw: nonce,
+    nonceLoading,
+    nonceError,
+    displayNameLoading,
+    displayNameError,
+    enabled: !!address && !!profileAddress
   })
+
+  if (nonceErrorDetail) {
+    console.error('❌ Nonce 查询错误:', nonceErrorDetail)
+  }
 
   // 获取写入合约的函数和状态
   const { writeContract, data: txHash, isPending, isSuccess, isError, error } = useWriteContract()
@@ -574,6 +586,63 @@ export function useAaveStaking() {
         address: stakingAddress,
         abi: AaveStakingABI,
         functionName: 'compoundRewards'
+      })
+  }
+}
+
+/**
+ * YDToken Owner 管理 Hook
+ * 提供 owner 专属功能：查看合约 ETH 余额和提取
+ * @returns {Object} 包含 owner 相关状态和函数的对象
+ */
+export function useYDTokenOwner() {
+  // 获取当前连接的钱包地址
+  const { address } = useAccount()
+
+  // 获取当前区块链网络 ID
+  const chainId = useChainId()
+
+  // 获取 YD 代币合约地址
+  const tokenAddress = getContractAddress('YDToken', chainId)
+
+  // 查询合约 owner 地址
+  const { data: ownerAddress } = useReadContract({
+    address: tokenAddress,
+    abi: YDTokenABI,
+    functionName: 'owner',
+    enabled: !!tokenAddress
+  })
+
+  // 查询合约 ETH 余额
+  const { data: contractBalance, refetch: refetchBalance } = useBalance({
+    address: tokenAddress,
+    enabled: !!tokenAddress
+  })
+
+  // 获取写入合约的函数和状态
+  const { writeContract, data: txHash, isPending } = useWriteContract()
+
+  // 判断当前用户是否为 owner
+  const isOwner = address && ownerAddress && address.toLowerCase() === ownerAddress.toLowerCase()
+
+  // 返回 owner 相关的状态和函数
+  return {
+    // 状态数据
+    isOwner, // 当前用户是否为 owner
+    ownerAddress, // owner 地址
+    contractBalance: contractBalance ? formatEther(contractBalance.value) : '0', // 合约 ETH 余额
+    isPending, // 交易是否正在处理中
+    txHash, // 最新交易的哈希值
+
+    // 刷新函数
+    refetchBalance, // 刷新余额
+
+    // Owner 操作
+    withdraw: () => // 提取合约中的 ETH
+      writeContract({
+        address: tokenAddress,
+        abi: YDTokenABI,
+        functionName: 'withdraw'
       })
   }
 }

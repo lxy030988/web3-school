@@ -10,7 +10,7 @@ import { useState, useEffect } from 'react'
 import { useAccount, useWaitForTransactionReceipt } from 'wagmi'
 
 // 导入自定义 hooks
-import { useUserProfile, useYDToken, usePurchasedCourses, useCourse } from '../hooks/useWeb3'
+import { useUserProfile, useYDToken, usePurchasedCourses, useCourse, useYDTokenOwner } from '../hooks/useWeb3'
 
 function PurchasedCourseCard({ courseId }) {
   const course = useCourse(courseId)
@@ -56,6 +56,9 @@ export default function ProfilePage() {
   const { ydBalance, buyTokens, isPending, txHash: ydTxHash, refetchBalance } = useYDToken()
   const { purchasedCourseIds } = usePurchasedCourses()
 
+  // Owner 专属功能
+  const { isOwner, contractBalance, withdraw, isPending: isWithdrawing, txHash: withdrawTxHash, refetchBalance: refetchContractBalance } = useYDTokenOwner()
+
   // 监听 YD 购买交易
   const { isSuccess: isYDTransactionSuccess } = useWaitForTransactionReceipt({
     hash: ydTxHash
@@ -64,6 +67,11 @@ export default function ProfilePage() {
   // 监听用户资料更新交易
   const { isSuccess: isProfileTransactionSuccess } = useWaitForTransactionReceipt({
     hash: profileTxHash
+  })
+
+  // 监听 ETH 提取交易
+  const { isSuccess: isWithdrawSuccess } = useWaitForTransactionReceipt({
+    hash: withdrawTxHash
   })
 
   // 同步合约中的 displayName 到本地 state
@@ -113,6 +121,25 @@ export default function ProfilePage() {
       alert('✅ 名称更新成功!')
     }
   }, [isProfileTransactionSuccess, profileTxHash, refetchDisplayName])
+
+  // ETH 提取成功后刷新余额
+  useEffect(() => {
+    if (isWithdrawSuccess && withdrawTxHash) {
+      console.log('✅ Withdraw successful! Hash:', withdrawTxHash)
+
+      // 刷新合约余额
+      const refreshContractBalance = () => {
+        console.log('🔄 Refreshing contract balance...')
+        refetchContractBalance()
+      }
+
+      refreshContractBalance()
+      setTimeout(refreshContractBalance, 1000)
+      setTimeout(refreshContractBalance, 2000)
+
+      alert('✅ ETH 提取成功!')
+    }
+  }, [isWithdrawSuccess, withdrawTxHash, refetchContractBalance])
 
   /**
    * 处理购买代币的函数
@@ -225,6 +252,32 @@ export default function ProfilePage() {
             预计获得: {ethAmount ? (parseFloat(ethAmount) * 1000).toFixed(2) : '0'} YD
           </p>
         </div>
+
+        {isOwner && (
+          <div className="card mb-8 border-2 border-yellow-500/30">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-2xl">👑</span>
+              <h3 className="text-lg font-semibold text-yellow-400">Owner 专属功能</h3>
+            </div>
+            <p className="text-gray-400 text-sm mb-4">您是 YDToken 合约的所有者，可以提取合约中的 ETH</p>
+            <div className="bg-purple-500/10 rounded-lg p-4 mb-4">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400">合约 ETH 余额:</span>
+                <span className="text-2xl font-bold text-purple-400">{parseFloat(contractBalance || 0).toFixed(4)} ETH</span>
+              </div>
+            </div>
+            <button
+              onClick={withdraw}
+              disabled={isWithdrawing || parseFloat(contractBalance || 0) === 0}
+              className="btn-primary w-full"
+            >
+              {isWithdrawing ? '提取中...' : '提取全部 ETH'}
+            </button>
+            {parseFloat(contractBalance || 0) === 0 && (
+              <p className="text-gray-500 text-xs mt-2 text-center">合约中没有 ETH 可提取</p>
+            )}
+          </div>
+        )}
 
         <h3 className="text-xl font-bold mb-4">我的课程 ({purchasedCourseIds.length})</h3>
         {purchasedCourseIds.length === 0 ? (

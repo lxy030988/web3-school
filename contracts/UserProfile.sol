@@ -114,13 +114,12 @@ contract UserProfile is Ownable {
             ')'
         );
 
-        // 4. 计算消息哈希
-        bytes32 messageHash = keccak256(message);
-
-        // 5. 验证签名
-        // toEthSignedMessageHash: 添加 "\x19Ethereum Signed Message:\n" 前缀
+        // 4. 验证签名
+        // toEthSignedMessageHash: 对消息添加 "\x19Ethereum Signed Message:\n{length}" 前缀并哈希
         // recover: 从签名恢复签名者地址
-        address signer = messageHash.toEthSignedMessageHash().recover(signature);
+        // 注意: 直接对原始消息字节调用 toEthSignedMessageHash，不要先 keccak256
+        bytes32 ethSignedHash = MessageHashUtils.toEthSignedMessageHash(message);
+        address signer = ethSignedHash.recover(signature);
         require(signer == msg.sender, "Invalid signature");
 
         // 6. 更新 nonce（防止签名重放）

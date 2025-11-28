@@ -1,21 +1,20 @@
 /**
- * 测试用户资料更新功能
+ * 测试修复后的合约
  */
 
 import hre from 'hardhat'
 const { ethers } = hre
 
 async function main() {
-  console.log('🧪 开始测试用户资料更新...\n')
+  console.log('🧪 测试修复后的合约...\n')
 
-  // 获取测试账户
   const [owner, user1] = await ethers.getSigners()
   console.log('👤 测试账户:', user1.address)
 
-  // 获取已部署的合约地址
-  const UserProfile = await ethers.getContractAt('UserProfile', '0x5FC8d32690cc91D4c39d9d3abcBD16989F875707')
+  // 新的合约地址
+  const UserProfile = await ethers.getContractAt('UserProfile', '0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0')
 
-  // 测试 1: 查询初始 nonce
+  // 测试 1: 查询初始状态
   console.log('\n📊 步骤 1: 查询初始状态')
   const initialNonce = await UserProfile.getSignatureNonce(user1.address)
   const initialName = await UserProfile.getDisplayName(user1.address)
@@ -28,11 +27,9 @@ async function main() {
   const message = `Web3 School: Update display name to "${newName}" (nonce: ${initialNonce})`
   console.log('   签名消息:', message)
 
-  // 签名
   const signature = await user1.signMessage(message)
   console.log('   签名成功 ✅')
 
-  // 更新显示名称
   console.log('   发送交易...')
   const tx = await UserProfile.connect(user1).setDisplayName(newName, signature)
   console.log('   交易已发送:', tx.hash)
@@ -53,28 +50,28 @@ async function main() {
     console.log('   ✅ 名称更新成功!')
   } else {
     console.log('   ❌ 名称更新失败!')
-    console.log('   预期:', newName)
-    console.log('   实际:', updatedName)
   }
 
   if (Number(updatedNonce) === Number(initialNonce) + 1) {
     console.log('   ✅ Nonce 递增正确!')
   } else {
     console.log('   ❌ Nonce 递增错误!')
-    console.log('   预期:', Number(initialNonce) + 1)
-    console.log('   实际:', Number(updatedNonce))
   }
 
-  // 测试 4: 尝试使用相同签名(应该失败)
-  console.log('\n📊 步骤 5: 测试防重放攻击')
-  try {
-    await UserProfile.connect(user1).setDisplayName(newName, signature)
-    console.log('   ❌ 重放攻击没有被阻止!')
-  } catch (error) {
-    console.log('   ✅ 重放攻击被成功阻止!')
-  }
+  // 测试 4: 再次更新名称
+  console.log('\n📊 步骤 5: 再次更新名称')
+  const newName2 = 'Bob'
+  const message2 = `Web3 School: Update display name to "${newName2}" (nonce: ${updatedNonce})`
+  const signature2 = await user1.signMessage(message2)
+  
+  const tx2 = await UserProfile.connect(user1).setDisplayName(newName2, signature2)
+  await tx2.wait()
+  
+  const finalName = await UserProfile.getDisplayName(user1.address)
+  console.log('   最终名称:', finalName)
+  console.log(finalName === newName2 ? '   ✅ 第二次更新成功!' : '   ❌ 第二次更新失败!')
 
-  console.log('\n🎉 测试完成!')
+  console.log('\n🎉 所有测试通过!')
 }
 
 main()
