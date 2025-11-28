@@ -3,7 +3,7 @@ import hre from 'hardhat'
 async function main() {
   const [owner] = await hre.ethers.getSigners()
 
-  const stakingAddress = '0x99bbA657f2BbC93c02D617f8bA121cB8Fc104Acf'
+  const stakingAddress = '0x68B1D87F95878fE05B998F19b66F4baba5De1aed'
   const AaveStaking = await hre.ethers.getContractAt('AaveStaking', stakingAddress)
 
   console.log('🔍 质押诊断')

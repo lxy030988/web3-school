@@ -42,19 +42,42 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false)
   const [ethAmount, setEthAmount] = useState('')
   const [lastProcessedTx, setLastProcessedTx] = useState(null)
-  const { updateDisplayName, isUpdating } = useUserProfile()
-  const { ydBalance, buyTokens, isPending, txHash, refetchBalance } = useYDToken()
+
+  // 用户资料相关
+  const {
+    displayName,
+    updateDisplayName,
+    refetchDisplayName,
+    txHash: profileTxHash,
+    isUpdating
+  } = useUserProfile()
+
+  // YD 代币相关
+  const { ydBalance, buyTokens, isPending, txHash: ydTxHash, refetchBalance } = useYDToken()
   const { purchasedCourseIds } = usePurchasedCourses()
 
-  const { isSuccess: isTransactionSuccess } = useWaitForTransactionReceipt({
-    hash: txHash
+  // 监听 YD 购买交易
+  const { isSuccess: isYDTransactionSuccess } = useWaitForTransactionReceipt({
+    hash: ydTxHash
   })
+
+  // 监听用户资料更新交易
+  const { isSuccess: isProfileTransactionSuccess } = useWaitForTransactionReceipt({
+    hash: profileTxHash
+  })
+
+  // 同步合约中的 displayName 到本地 state
+  useEffect(() => {
+    if (displayName) {
+      setName(displayName)
+    }
+  }, [displayName])
 
   // 购买代币成功后刷新余额
   useEffect(() => {
-    if (isTransactionSuccess && txHash && txHash !== lastProcessedTx) {
-      console.log('✅ Purchase successful! Hash:', txHash)
-      setLastProcessedTx(txHash)
+    if (isYDTransactionSuccess && ydTxHash && ydTxHash !== lastProcessedTx) {
+      console.log('✅ Purchase successful! Hash:', ydTxHash)
+      setLastProcessedTx(ydTxHash)
 
       // 多次刷新确保数据更新
       const refreshBalance = () => {
@@ -68,7 +91,28 @@ export default function ProfilePage() {
 
       alert('✅ 购买成功!')
     }
-  }, [isTransactionSuccess, txHash, lastProcessedTx, refetchBalance])
+  }, [isYDTransactionSuccess, ydTxHash, lastProcessedTx, refetchBalance])
+
+  // 用户资料更新成功后刷新并关闭编辑模式
+  useEffect(() => {
+    if (isProfileTransactionSuccess && profileTxHash) {
+      console.log('✅ Profile update successful! Hash:', profileTxHash)
+
+      // 多次刷新确保数据更新
+      const refreshProfile = () => {
+        console.log('🔄 Refreshing profile...')
+        refetchDisplayName()
+      }
+
+      refreshProfile()
+      setTimeout(refreshProfile, 1000)
+      setTimeout(refreshProfile, 2000)
+
+      // 关闭编辑模式
+      setIsEditing(false)
+      alert('✅ 名称更新成功!')
+    }
+  }, [isProfileTransactionSuccess, profileTxHash, refetchDisplayName])
 
   /**
    * 处理购买代币的函数
@@ -87,13 +131,23 @@ export default function ProfilePage() {
 
   const handleSave = async () => {
     if (!name.trim()) return
+    console.log('💾 开始保存名称:', name)
     try {
       await updateDisplayName(name)
-      setIsEditing(false)
+      console.log('✅ updateDisplayName 调用完成')
     } catch (error) {
-      console.error('Update failed:', error)
+      console.error('❌ handleSave 错误:', error)
+      alert('❌ 保存失败: ' + error.message)
     }
+    // 不要立即关闭编辑模式,等交易确认后再关闭
   }
+
+  // 调试: 监听 profileTxHash 变化
+  useEffect(() => {
+    console.log('📊 profileTxHash 变化:', profileTxHash)
+    console.log('📊 isUpdating:', isUpdating)
+    console.log('📊 isProfileTransactionSuccess:', isProfileTransactionSuccess)
+  }, [profileTxHash, isUpdating, isProfileTransactionSuccess])
 
   if (!isConnected) {
     return (
@@ -134,7 +188,7 @@ export default function ProfilePage() {
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <h2 className="text-2xl font-bold">{name || address?.slice(0, 10) + '...'}</h2>
+                  <h2 className="text-2xl font-bold">{displayName || address?.slice(0, 10) + '...'}</h2>
                   <button onClick={() => setIsEditing(true)} className="text-purple-400 hover:text-purple-300">
                     ✏️ 编辑
                   </button>

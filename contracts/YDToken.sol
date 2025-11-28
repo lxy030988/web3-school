@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+// 导入OpenZeppelin库中的ERC20标准合约
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+// 导入OpenZeppelin库中可烧毁的ERC20扩展合约
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
+// 导入OpenZeppelin库中的所有权管理合约
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
@@ -23,7 +26,7 @@ contract YDToken is ERC20, ERC20Burnable, Ownable {
     uint256 public tokenPrice = 0.001 ether;
 
     /// @notice 最大供应量：1亿枚（加上18位小数）
-    uint256 public constant MAX_SUPPLY = 100_000_000 * 10**18;
+    uint256 public constant MAX_SUPPLY = 100_000_000 * 10 ** 18;
 
     // ============ 事件 ============
 
@@ -31,7 +34,11 @@ contract YDToken is ERC20, ERC20Burnable, Ownable {
     /// @param buyer 购买者地址
     /// @param ethAmount 支付的 ETH 数量
     /// @param tokenAmount 获得的 YD 代币数量
-    event TokensPurchased(address indexed buyer, uint256 ethAmount, uint256 tokenAmount);
+    event TokensPurchased(
+        address indexed buyer,
+        uint256 ethAmount,
+        uint256 tokenAmount
+    );
 
     /// @notice 当代币价格更新时触发
     /// @param oldPrice 旧价格
@@ -45,7 +52,7 @@ contract YDToken is ERC20, ERC20Burnable, Ownable {
      * @dev 给部署者（owner）铸造 1000 万枚初始代币
      */
     constructor() ERC20("YD Token", "YD") Ownable(msg.sender) {
-        _mint(msg.sender, 10_000_000 * 10**18); // 1000万初始供应
+        _mint(msg.sender, 10_000_000 * 10 ** 18); // 1000万初始供应
     }
 
     // ============ 外部函数 ============
@@ -66,10 +73,13 @@ contract YDToken is ERC20, ERC20Burnable, Ownable {
         require(msg.value > 0, "Must send ETH");
 
         // 计算可以购买的代币数量
-        uint256 tokenAmount = (msg.value * 10**18) / tokenPrice;
+        uint256 tokenAmount = (msg.value * 10 ** 18) / tokenPrice;
 
         // 检查是否超过最大供应量
-        require(totalSupply() + tokenAmount <= MAX_SUPPLY, "Exceeds max supply");
+        require(
+            totalSupply() + tokenAmount <= MAX_SUPPLY,
+            "Exceeds max supply"
+        );
 
         // 铸造代币给购买者
         _mint(msg.sender, tokenAmount);

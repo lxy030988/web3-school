@@ -296,27 +296,55 @@ export function useIsAuthor(courseId) {
 export function useUserProfile() {
   // 获取当前连接的钱包地址
   const { address } = useAccount()
-  
+
   // 获取当前区块链网络 ID
   const chainId = useChainId()
-  
+
   // 获取签名消息的函数
   const { signMessageAsync } = useSignMessage()
-  
+
   // 获取用户资料合约地址
   const profileAddress = getContractAddress('UserProfile', chainId)
 
+  // 查询用户显示名称
+  const { data: displayName, refetch: refetchDisplayName } = useReadContract({
+    address: profileAddress,
+    abi: UserProfileABI,
+    functionName: 'getDisplayName',
+    args: [address], // 用户地址
+    enabled: !!address && !!profileAddress, // 仅在有地址和合约地址时启用查询
+    watch: true, // 自动监听变化
+    query: {
+      refetchInterval: 3000, // 每3秒刷新一次
+      gcTime: 0, // 不缓存
+      staleTime: 0 // 立即标记为过期
+    }
+  })
+
   // 查询用户签名随机数，用于防止重放攻击
-  const { data: nonce } = useReadContract({
+  const { data: nonce, refetch: refetchNonce } = useReadContract({
     address: profileAddress,
     abi: UserProfileABI,
     functionName: 'getSignatureNonce',
     args: [address], // 用户地址
-    enabled: !!address // 仅在有地址时启用查询
+    enabled: !!address && !!profileAddress, // 仅在有地址和合约地址时启用查询
+    query: {
+      refetchInterval: 3000, // 每3秒刷新一次
+      gcTime: 0, // 不缓存
+      staleTime: 0 // 立即标记为过期
+    }
+  })
+
+  // 调试日志
+  console.log('🔍 useUserProfile:', {
+    profileAddress,
+    address,
+    nonce: nonce?.toString(),
+    displayName
   })
 
   // 获取写入合约的函数和状态
-  const { writeContract, isPending } = useWriteContract()
+  const { writeContract, data: txHash, isPending, isSuccess, isError, error } = useWriteContract()
 
   /**
    * 更新用户显示名称
@@ -328,31 +356,58 @@ export function useUserProfile() {
       try {
         // 构造签名消息，包含用户名称和随机数
         const msg = `Web3 School: Update display name to "${name}" (nonce: ${nonce || 0})`
-        
+
+        console.log('🔐 请求签名:', msg)
+
         // 签名消息
         const sig = await signMessageAsync({ message: msg })
-        
+
+        console.log('✅ 签名成功')
+        console.log('📤 发送交易到合约...', {
+          address: profileAddress,
+          name,
+          nonce
+        })
+
         // 调用智能合约更新显示名称
+        // writeContract 是同步的,不返回值,交易 hash 通过 data 状态返回
         writeContract({
           address: profileAddress,
           abi: UserProfileABI,
           functionName: 'setDisplayName',
           args: [name, sig] // 名称和签名
         })
+
+        console.log('✅ 交易请求已发送')
       } catch (e) {
         // 错误处理和日志记录
-        console.error('Failed to update display name:', e.message)
+        console.error('❌ 更新失败:', e)
+        throw e
       }
     },
     [nonce, signMessageAsync, writeContract, profileAddress] // 依赖项
   )
 
   // 返回更新函数和状态
-  return { 
+  return {
+    // 用户显示名称
+    displayName: displayName || '',
+    // nonce 值
+    nonce,
     // 更新显示名称的函数
-    updateDisplayName, 
-    // 是否正在更新
-    isUpdating: isPending 
+    updateDisplayName,
+    // 刷新显示名称的函数
+    refetchDisplayName,
+    // 刷新 nonce 的函数
+    refetchNonce,
+    // 交易状态
+    txHash,
+    isPending,
+    isSuccess,
+    isError,
+    error,
+    // 是否正在更新 (向后兼容)
+    isUpdating: isPending
   }
 }
 

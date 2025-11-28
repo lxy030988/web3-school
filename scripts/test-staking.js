@@ -1,82 +1,36 @@
-import hre from "hardhat";
+import hre from 'hardhat'
 
 async function main() {
-  const [account0, account1] = await hre.ethers.getSigners();
-  const tokenAddress = "0xc5a5C42992dECbae36851359345FE25997F5C42d";
-  const stakingAddress = "0xa82fF9aFd8f496c3d6ac40E2a0F282E47488CFc9";
-
-  const token = await hre.ethers.getContractAt("YDToken", tokenAddress);
-  const staking = await hre.ethers.getContractAt("AaveStaking", stakingAddress);
-
-  console.log("=== 测试账户1的质押流程 ===");
-  console.log("账户地址:", account1.address);
-
-  // 1. 检查 YD 余额
-  const balance = await token.balanceOf(account1.address);
-  console.log("\n1. YD 余额:", hre.ethers.formatEther(balance), "YD");
-
-  if (balance === 0n) {
-    console.log("❌ 余额为0，无法测试质押");
-    return;
-  }
-
-  // 2. 检查授权额度
-  const allowance = await token.allowance(account1.address, stakingAddress);
-  console.log("2. 当前授权额度:", hre.ethers.formatEther(allowance), "YD");
-
-  // 3. 检查当前质押额
-  const stakeInfo = await staking.stakes(account1.address);
-  console.log("3. 当前已质押:", hre.ethers.formatEther(stakeInfo.ydStaked), "YD");
-
-  // 4. 尝试授权 1000 YD
-  const approveAmount = hre.ethers.parseEther("1000");
-  console.log("\n4. 正在授权 1000 YD...");
+  const [owner] = await hre.ethers.getSigners()
+  
+  const stakingAddress = '0x68B1D87F95878fE05B998F19b66F4baba5De1aed'
+  const ydTokenAddress = '0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0'
+  
+  console.log('测试合约调用...')
+  console.log('账户:', owner.address)
+  console.log('Staking 地址:', stakingAddress)
+  console.log('YDToken 地址:', ydTokenAddress)
+  console.log('')
+  
   try {
-    const approveTx = await token.connect(account1).approve(stakingAddress, approveAmount);
-    await approveTx.wait();
-    console.log("✅ 授权成功");
-
-    const newAllowance = await token.allowance(account1.address, stakingAddress);
-    console.log("   新授权额度:", hre.ethers.formatEther(newAllowance), "YD");
+    // 测试 YDToken
+    const YDToken = await hre.ethers.getContractAt('YDToken', ydTokenAddress)
+    const balance = await YDToken.balanceOf(owner.address)
+    console.log('✅ YD 余额:', hre.ethers.formatEther(balance))
+    
+    // 测试 AaveStaking
+    const AaveStaking = await hre.ethers.getContractAt('AaveStaking', stakingAddress)
+    const baseAPY = await AaveStaking.baseAPY()
+    console.log('✅ Base APY:', Number(baseAPY) / 100 + '%')
+    
+    const totalStaked = await AaveStaking.totalYDStaked()
+    console.log('✅ Total YD Staked:', hre.ethers.formatEther(totalStaked))
+    
+    console.log('\n🎉 合约部署成功！')
+    
   } catch (error) {
-    console.log("❌ 授权失败:", error.message);
-    return;
+    console.error('❌ 错误:', error.message)
   }
-
-  // 5. 尝试质押 100 YD
-  const depositAmount = hre.ethers.parseEther("100");
-  console.log("\n5. 正在质押 100 YD...");
-  try {
-    const depositTx = await staking.connect(account1).depositYD(depositAmount);
-    console.log("   交易已发送，等待确认...");
-    const receipt = await depositTx.wait();
-    console.log("✅ 质押成功！Gas used:", receipt.gasUsed.toString());
-  } catch (error) {
-    console.log("❌ 质押失败:");
-    console.log("   错误消息:", error.message);
-    if (error.data) {
-      console.log("   错误数据:", error.data);
-    }
-    return;
-  }
-
-  // 6. 检查质押后的状态
-  console.log("\n6. 质押后状态检查:");
-  const newBalance = await token.balanceOf(account1.address);
-  const newStakeInfo = await staking.stakes(account1.address);
-
-  console.log("   YD 余额:", hre.ethers.formatEther(newBalance), "YD");
-  console.log("   已质押:", hre.ethers.formatEther(newStakeInfo.ydStaked), "YD");
-  console.log("   质押时间:", new Date(Number(newStakeInfo.depositTime) * 1000).toLocaleString());
-
-  // 7. 等待几秒后检查收益
-  console.log("\n7. 等待 5 秒后检查收益...");
-  await new Promise(resolve => setTimeout(resolve, 5000));
-
-  const rewards = await staking.calculateRewards(account1.address);
-  console.log("   累计收益:", hre.ethers.formatEther(rewards), "YD");
-
-  console.log("\n✅ 质押功能测试完成");
 }
 
-main().catch(console.error);
+main().catch(console.error)

@@ -10,7 +10,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { useAccount, useConnect, useDisconnect } from 'wagmi'
 
 // 导入自定义 Web3 hooks
-import { useYDToken } from '../hooks/useWeb3'
+import { useYDToken, useUserProfile } from '../hooks/useWeb3'
 
 /**
  * 头部组件函数
@@ -19,18 +19,21 @@ import { useYDToken } from '../hooks/useWeb3'
 export default function Header() {
   // 获取当前路由位置
   const location = useLocation()
-  
+
   // 获取钱包账户信息
   const { address, isConnected } = useAccount()
-  
+
   // 获取钱包连接相关函数和连接器
   const { connect, connectors } = useConnect()
-  
+
   // 获取断开连接函数
   const { disconnect } = useDisconnect()
-  
+
   // 获取YD代币余额
   const { ydBalance } = useYDToken()
+
+  // 获取用户显示名称
+  const { displayName } = useUserProfile()
 
   // 导航链接配置
   const navLinks = [
@@ -64,7 +67,7 @@ export default function Header() {
               {ydBalance || '0'} YD
             </span>
             <span className="px-3 py-1 bg-purple-500/20 rounded-lg text-purple-400 text-sm">
-              {address?.slice(0, 6)}...{address?.slice(-4)}
+              {displayName || `${address?.slice(0, 6)}...${address?.slice(-4)}`}
             </span>
             <button onClick={() => disconnect()} className="text-gray-400 hover:text-white text-sm">断开</button>
           </div>

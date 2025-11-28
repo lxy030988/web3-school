@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+// 导入Ownable合约，实现所有权控制功能，允许合约所有者拥有特殊权限
 import "@openzeppelin/contracts/access/Ownable.sol";
+// 导入ReentrancyGuard合约，用于防止重入攻击，增强合约安全性
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+// 导入IERC20接口，定义ERC20代币标准的基本接口，包括余额转账等功能
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+// 导入SafeERC20合约库，提供ERC20代币的安全操作，如转账时的异常处理
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /**
@@ -12,7 +16,11 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
  * @dev 这些地址是 Sepolia 测试网的 Aave V3 地址
  */
 interface IWETHGateway {
-    function depositETH(address pool, address onBehalfOf, uint16 referralCode) external payable;
+    function depositETH(
+        address pool,
+        address onBehalfOf,
+        uint16 referralCode
+    ) external payable;
     function withdrawETH(address pool, uint256 amount, address to) external;
 }
 
@@ -38,10 +46,12 @@ contract AaveStaking is Ownable, ReentrancyGuard {
     // ============ 常量 ============
 
     /// @notice Aave V3 池子地址（Sepolia 测试网）
-    address public constant AAVE_POOL = 0x6Ae43d3271ff6888e7Fc43Fd7321a503ff738951;
+    address public constant AAVE_POOL =
+        0x6Ae43d3271ff6888e7Fc43Fd7321a503ff738951;
 
     /// @notice WETH 网关地址（用于 ETH 存取）
-    address public constant WETH_GATEWAY = 0x387d311e47e80b498169e6fb51d3193167d89F7D;
+    address public constant WETH_GATEWAY =
+        0x387d311e47e80b498169e6fb51d3193167d89F7D;
 
     /// @notice aWETH 代币地址（Aave 的计息 WETH）
     address public constant aWETH = 0x5b071b590a59395fE4025A0Ccc1FcC931AAc1830;
@@ -54,10 +64,10 @@ contract AaveStaking is Ownable, ReentrancyGuard {
     /// @notice 质押信息结构体
     /// @dev 每个用户的质押数据
     struct StakeInfo {
-        uint256 ydStaked;        // 质押的 YD 代币数量
-        uint256 ethStaked;       // 质押的 ETH 数量
-        uint256 depositTime;     // 最后一次存款/复投时间
-        uint256 claimedRewards;  // 已领取的累计收益（用于统计）
+        uint256 ydStaked; // 质押的 YD 代币数量
+        uint256 ethStaked; // 质押的 ETH 数量
+        uint256 depositTime; // 最后一次存款/复投时间
+        uint256 claimedRewards; // 已领取的累计收益（用于统计）
     }
 
     /// @notice 用户地址 => 质押信息
@@ -113,12 +123,12 @@ contract AaveStaking is Ownable, ReentrancyGuard {
     function _compoundRewards(address user) internal returns (uint256) {
         uint256 rewards = calculateRewards(user);
         if (rewards > 0) {
-            stakes[user].ydStaked += rewards;           // 收益加到质押金额
-            stakes[user].claimedRewards += rewards;      // 更新累计收益统计
-            totalYDStaked += rewards;                    // 更新全网总质押
+            stakes[user].ydStaked += rewards; // 收益加到质押金额
+            stakes[user].claimedRewards += rewards; // 更新累计收益统计
+            totalYDStaked += rewards; // 更新全网总质押
             emit RewardsCompounded(user, rewards);
         }
-        stakes[user].depositTime = block.timestamp;      // 重置计时
+        stakes[user].depositTime = block.timestamp; // 重置计时
         return rewards;
     }
 
@@ -198,7 +208,11 @@ contract AaveStaking is Ownable, ReentrancyGuard {
         require(msg.value > 0, "ETH required");
 
         // 通过 WETH Gateway 存入 ETH 到 Aave
-        IWETHGateway(WETH_GATEWAY).depositETH{value: msg.value}(AAVE_POOL, address(this), 0);
+        IWETHGateway(WETH_GATEWAY).depositETH{value: msg.value}(
+            AAVE_POOL,
+            address(this),
+            0
+        );
 
         // 更新质押数据
         stakes[msg.sender].ethStaked += msg.value;
@@ -227,7 +241,10 @@ contract AaveStaking is Ownable, ReentrancyGuard {
      * @custom:security 使用 nonReentrant 防止重入攻击
      */
     function withdrawETH(uint256 amount) external nonReentrant {
-        require(stakes[msg.sender].ethStaked >= amount, "Insufficient ETH balance");
+        require(
+            stakes[msg.sender].ethStaked >= amount,
+            "Insufficient ETH balance"
+        );
 
         // 更新质押数据（先扣除，防止重入）
         stakes[msg.sender].ethStaked -= amount;
@@ -240,7 +257,10 @@ contract AaveStaking is Ownable, ReentrancyGuard {
         emit Withdrawn(msg.sender, amount, "ETH");
 
         // 如果全部提取，清空用户记录
-        if (stakes[msg.sender].ethStaked == 0 && stakes[msg.sender].ydStaked == 0) {
+        if (
+            stakes[msg.sender].ethStaked == 0 &&
+            stakes[msg.sender].ydStaked == 0
+        ) {
             delete stakes[msg.sender];
         }
     }
@@ -317,7 +337,9 @@ contract AaveStaking is Ownable, ReentrancyGuard {
      * @param user 用户地址
      * @return YD 代币质押数量和 ETH 质押数量
      */
-    function getStakedBalance(address user) external view returns (uint256, uint256) {
+    function getStakedBalance(
+        address user
+    ) external view returns (uint256, uint256) {
         return (stakes[user].ydStaked, stakes[user].ethStaked);
     }
 
