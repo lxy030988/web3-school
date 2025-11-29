@@ -20,27 +20,43 @@ import { useWaitForTransactionReceipt } from 'wagmi'
 export default function CourseCard({ course }) {
   // 从课程对象中解构所需属性
   const { id, name, description, category, price, totalStudents = 0 } = course
-  
+
   // 控制购买对话框的显示状态
   const [showPurchase, setShowPurchase] = useState(false)
-  
+
   // 控制是否需要授权的状态
   const [needsApproval, setNeedsApproval] = useState(false)
-  
+
+  // 记录当前操作的交易hash，用于区分是否是本卡片发起的交易
+  const [currentApproveHash, setCurrentApproveHash] = useState(null)
+  const [currentPurchaseHash, setCurrentPurchaseHash] = useState(null)
+  // 记录已处理的交易hash，防止重复处理
+  const [handledApproveHash, setHandledApproveHash] = useState(null)
+  const [handledPurchaseHash, setHandledPurchaseHash] = useState(null)
+
   // 购买课程相关的 hook
   const { purchaseCourse, isPurchasing, purchaseHash } = useCoursePurchase()
-  
+
   // YD代币相关的 hook
-  const { approve, isPending: isApproving, allowance } = useYDToken()
-  
+  const { approve, isPending: isApproving, txHash: approveTxHash, refetchAllowance, refetchBalance, allowance } = useYDToken()
+
   // 检查是否已购买课程的 hook
   const { hasPurchased, refetch: refetchPurchaseStatus } = useHasPurchased(id)
 
   // 使用 hook 返回的实时状态判断是否已购买
   const isPurchased = hasPurchased
 
+  // 监听授权交易是否成功
+  const { isSuccess: isApproveSuccess } = useWaitForTransactionReceipt({
+    hash: currentApproveHash,
+    enabled: !!currentApproveHash
+  })
+
   // 监听购买交易是否成功
-  const { isSuccess: isPurchaseSuccess } = useWaitForTransactionReceipt({ hash: purchaseHash })
+  const { isSuccess: isPurchaseSuccess } = useWaitForTransactionReceipt({
+    hash: currentPurchaseHash,
+    enabled: !!currentPurchaseHash
+  })
 
   // 检查是否需要授权的副作用
   useEffect(() => {
@@ -53,19 +69,50 @@ export default function CourseCard({ course }) {
     }
   }, [allowance, price]) // 当授权额度或价格变化时重新计算
 
+  // 授权成功后的处理
+  useEffect(() => {
+    if (isApproveSuccess && currentApproveHash && currentApproveHash !== handledApproveHash) {
+      // 标记已处理
+      setHandledApproveHash(currentApproveHash)
+      // 刷新授权额度
+      refetchAllowance()
+      // 重置当前hash
+      setCurrentApproveHash(null)
+    }
+  }, [isApproveSuccess, currentApproveHash, handledApproveHash, refetchAllowance])
+
   // 购买成功后的处理副作用
   useEffect(() => {
-    if (isPurchaseSuccess) {
+    if (isPurchaseSuccess && currentPurchaseHash && currentPurchaseHash !== handledPurchaseHash) {
+      // 标记已处理
+      setHandledPurchaseHash(currentPurchaseHash)
       // 关闭购买对话框
       setShowPurchase(false)
-      // 立即刷新购买状态
-      setTimeout(() => {
-        refetchPurchaseStatus()
-      }, 1000) // 等待1秒让区块确认
+      // 刷新购买状态和余额
+      refetchPurchaseStatus()
+      refetchBalance()
+      // 重置当前hash
+      setCurrentPurchaseHash(null)
       // 显示成功提示
       alert('🎉 购买成功!课程已添加到"个人中心"')
     }
-  }, [isPurchaseSuccess, refetchPurchaseStatus]) // 当购买成功或刷新函数变化时执行
+  }, [isPurchaseSuccess, currentPurchaseHash, handledPurchaseHash, refetchPurchaseStatus, refetchBalance])
+
+  // 监听授权交易hash变化
+  useEffect(() => {
+    if (approveTxHash && isApproving === false && !currentApproveHash) {
+      // 新的授权交易已提交
+      setCurrentApproveHash(approveTxHash)
+    }
+  }, [approveTxHash, isApproving, currentApproveHash])
+
+  // 监听购买交易hash变化
+  useEffect(() => {
+    if (purchaseHash && isPurchasing === false && !currentPurchaseHash) {
+      // 新的购买交易已提交
+      setCurrentPurchaseHash(purchaseHash)
+    }
+  }, [purchaseHash, isPurchasing, currentPurchaseHash])
 
   /**
    * 处理授权操作
@@ -106,6 +153,12 @@ export default function CourseCard({ course }) {
     }
   }
 
+  // 判断授权是否正在进行中（提交中或等待确认）
+  const isApprovingOrConfirming = isApproving || (currentApproveHash && !isApproveSuccess)
+
+  // 判断购买是否正在进行中（提交中或等待确认）
+  const isPurchasingOrConfirming = isPurchasing || (currentPurchaseHash && !isPurchaseSuccess)
+
   return (
     <div className={`card transition-transform ${isPurchased ? 'cursor-default' : 'hover:scale-105 cursor-pointer'}`} onClick={() => !isPurchased && setShowPurchase(true)}>
       <div className="aspect-video rounded-xl mb-4 bg-gradient-to-br from-purple-600/30 to-pink-600/30 flex items-center justify-center">
@@ -141,16 +194,16 @@ export default function CourseCard({ course }) {
               </div>
             )}
             <div className="flex gap-3">
-              <button onClick={() => setShowPurchase(false)} className="flex-1 btn-secondary" disabled={isPurchasing || isApproving}>
+              <button onClick={() => setShowPurchase(false)} className="flex-1 btn-secondary" disabled={isPurchasingOrConfirming || isApprovingOrConfirming}>
                 取消
               </button>
               {needsApproval ? (
-                <button onClick={handleApprove} className="flex-1 btn-primary" disabled={isApproving}>
-                  {isApproving ? '授权中...' : '授权支付'}
+                <button onClick={handleApprove} className="flex-1 btn-primary" disabled={isApprovingOrConfirming}>
+                  {isApprovingOrConfirming ? '授权中...' : '授权支付'}
                 </button>
               ) : (
-                <button onClick={handlePurchase} className="flex-1 btn-primary" disabled={isPurchasing}>
-                  {isPurchasing ? '购买中...' : '确认购买'}
+                <button onClick={handlePurchase} className="flex-1 btn-primary" disabled={isPurchasingOrConfirming}>
+                  {isPurchasingOrConfirming ? '购买中...' : '确认购买'}
                 </button>
               )}
             </div>

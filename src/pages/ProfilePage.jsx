@@ -10,7 +10,7 @@ import { useState, useEffect } from 'react'
 import { useAccount, useWaitForTransactionReceipt } from 'wagmi'
 
 // 导入自定义 hooks
-import { useUserProfile, useYDToken, usePurchasedCourses, useCourse, useYDTokenOwner, useAaveStakingOwner } from '../hooks/useWeb3'
+import { useUserProfile, useYDToken, usePurchasedCourses, useCourse, useYDTokenOwner, useAaveStakingOwner, useCourseMarketOwner } from '../hooks/useWeb3'
 
 function PurchasedCourseCard({ courseId }) {
   const course = useCourse(courseId)
@@ -69,6 +69,17 @@ export default function ProfilePage() {
     refetchEarnings
   } = useAaveStakingOwner()
 
+  // CourseMarket Owner 专属功能 - 课程售卖手续费收益
+  const {
+    isOwner: isCourseMarketOwner,
+    platformEarnings: courseMarketEarnings,
+    withdrawPlatformEarnings: withdrawCourseMarketEarnings,
+    isPending: isWithdrawingCourseMarket,
+    isConfirmed: isCourseMarketWithdrawConfirmed,
+    txHash: withdrawCourseMarketTxHash,
+    refetchEarnings: refetchCourseMarketEarnings
+  } = useCourseMarketOwner()
+
   // 监听 YD 购买交易
   const { isSuccess: isYDTransactionSuccess } = useWaitForTransactionReceipt({
     hash: ydTxHash
@@ -88,6 +99,9 @@ export default function ProfilePage() {
   const { isSuccess: isWithdrawAaveSuccess } = useWaitForTransactionReceipt({
     hash: withdrawAaveTxHash
   })
+
+  // 记录已处理的 CourseMarket 提取交易
+  const [handledCourseMarketTx, setHandledCourseMarketTx] = useState(null)
 
   // 同步合约中的 displayName 到本地 state
   useEffect(() => {
@@ -174,6 +188,20 @@ export default function ProfilePage() {
       alert('✅ Aave 平台收益提取成功!')
     }
   }, [isWithdrawAaveSuccess, withdrawAaveTxHash, refetchEarnings])
+
+  // CourseMarket 平台收益提取成功后刷新
+  useEffect(() => {
+    if (isCourseMarketWithdrawConfirmed && withdrawCourseMarketTxHash && withdrawCourseMarketTxHash !== handledCourseMarketTx) {
+      console.log('✅ CourseMarket platform earnings withdraw successful! Hash:', withdrawCourseMarketTxHash)
+      setHandledCourseMarketTx(withdrawCourseMarketTxHash)
+
+      // 刷新平台收益和 YD 余额
+      refetchCourseMarketEarnings()
+      refetchBalance()
+
+      alert('✅ 课程市场平台收益提取成功!')
+    }
+  }, [isCourseMarketWithdrawConfirmed, withdrawCourseMarketTxHash, handledCourseMarketTx, refetchCourseMarketEarnings, refetchBalance])
 
   /**
    * 处理购买代币的函数
@@ -338,6 +366,35 @@ export default function ProfilePage() {
             )}
             <p className="text-gray-500 text-xs mt-2 text-center">
               💡 用户获得 80% 的 Aave 收益，平台保留 20%
+            </p>
+          </div>
+        )}
+
+        {isCourseMarketOwner && (
+          <div className="card mb-8 border-2 border-blue-500/30">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-2xl">📚</span>
+              <h3 className="text-lg font-semibold text-blue-400">Owner 专属功能 - 课程市场平台收益</h3>
+            </div>
+            <p className="text-gray-400 text-sm mb-4">您是 CourseMarket 合约的所有者，可以提取课程售卖 5% 的平台手续费收益</p>
+            <div className="bg-blue-500/10 rounded-lg p-4 mb-4">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400">平台可提取收益 (5% 手续费):</span>
+                <span className="text-2xl font-bold text-blue-400">{parseFloat(courseMarketEarnings || 0).toFixed(4)} YD</span>
+              </div>
+            </div>
+            <button
+              onClick={withdrawCourseMarketEarnings}
+              disabled={isWithdrawingCourseMarket || (withdrawCourseMarketTxHash && !isCourseMarketWithdrawConfirmed) || parseFloat(courseMarketEarnings || 0) === 0}
+              className="btn-primary w-full"
+            >
+              {(isWithdrawingCourseMarket || (withdrawCourseMarketTxHash && !isCourseMarketWithdrawConfirmed && withdrawCourseMarketTxHash !== handledCourseMarketTx)) ? '提取中...' : '提取平台收益'}
+            </button>
+            {parseFloat(courseMarketEarnings || 0) === 0 && (
+              <p className="text-gray-500 text-xs mt-2 text-center">暂无平台收益可提取</p>
+            )}
+            <p className="text-gray-500 text-xs mt-2 text-center">
+              💡 课程作者获得 95% 的课程收入，平台保留 5% 手续费
             </p>
           </div>
         )}

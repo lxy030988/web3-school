@@ -109,6 +109,13 @@ contract CourseMarket is Ownable, ReentrancyGuard {
      */
     event EarningsWithdrawn(address indexed author, uint256 amount);
 
+    /**
+     * @notice 当平台提取收益时触发
+     * @param owner Owner 地址
+     * @param amount 提取金额
+     */
+    event PlatformEarningsWithdrawn(address indexed owner, uint256 amount);
+
     // ============ 构造函数 ============
 
     /**
@@ -220,5 +227,30 @@ contract CourseMarket is Ownable, ReentrancyGuard {
      */
     function getPurchasedCourses(address user) external view returns (uint256[] memory) {
         return userPurchasedCourses[user];
+    }
+
+    /**
+     * @notice 平台提取收益（仅 Owner）
+     * @dev Owner 提取所有平台累计的 YD 代币收益
+     *
+     * 执行流程：
+     * 1. 检查是否有待提取金额
+     * 2. 重置平台收益为 0（防止重入）
+     * 3. 转账 YD 代币给 Owner
+     *
+     * @custom:security 使用 nonReentrant 防止重入攻击
+     * @custom:security 仅 Owner 可调用
+     */
+    function withdrawPlatformEarnings() external onlyOwner nonReentrant {
+        uint256 amount = platformEarnings;
+        require(amount > 0, "No platform earnings");
+
+        // 先重置余额（防止重入）
+        platformEarnings = 0;
+
+        // 转账给 Owner
+        ydToken.safeTransfer(msg.sender, amount);
+
+        emit PlatformEarningsWithdrawn(msg.sender, amount);
     }
 }

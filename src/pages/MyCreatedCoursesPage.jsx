@@ -4,7 +4,7 @@
  */
 
 // 导入 React 核心功能
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 // 导入路由相关组件
 import { Link } from 'react-router-dom'
@@ -13,7 +13,7 @@ import { Link } from 'react-router-dom'
 import { useAccount } from 'wagmi'
 
 // 导入自定义 hooks
-import { useCourses, useCourse } from '../hooks/useWeb3'
+import { useCourses, useCourse, useAuthorEarnings, useYDToken } from '../hooks/useWeb3'
 
 /**
  * 已创建课程项组件
@@ -54,6 +54,42 @@ export default function MyCreatedCoursesPage() {
   const { address, isConnected } = useAccount()
   const { courseIds } = useCourses()
   const [search, setSearch] = useState('')
+  const [lastTxHash, setLastTxHash] = useState(null)
+
+  // 获取 YD 代币余额刷新函数（与 Header 共享缓存）
+  const { refetchBalance } = useYDToken()
+
+  // 获取作者收入相关数据和函数
+  const {
+    earnings,
+    isPending,
+    isConfirmed,
+    txHash,
+    withdrawEarnings,
+    refetchEarnings
+  } = useAuthorEarnings()
+
+  // 监听交易确认，刷新数据
+  useEffect(() => {
+    if (isConfirmed && txHash && txHash !== lastTxHash) {
+      setLastTxHash(txHash)
+      refetchEarnings()
+      refetchBalance()
+      alert('提取成功！YD 代币已转入您的钱包')
+    }
+  }, [isConfirmed, txHash, lastTxHash, refetchEarnings, refetchBalance])
+
+  // 判断是否正在加载：提交中 或 已提交但未确认
+  const isLoading = isPending || (txHash && !isConfirmed && txHash !== lastTxHash)
+
+  // 处理提取收入
+  const handleWithdraw = () => {
+    if (parseFloat(earnings) <= 0) {
+      alert('暂无可提取的收入')
+      return
+    }
+    withdrawEarnings()
+  }
 
   if (!isConnected) {
     return (
@@ -78,6 +114,47 @@ export default function MyCreatedCoursesPage() {
           <Link to="/create-course" className="btn-primary">
             ➕ 创建新课程
           </Link>
+        </div>
+
+        {/* 收入提取卡片 */}
+        <div className="card mb-8 bg-gradient-to-r from-purple-900/50 to-pink-900/50 border border-purple-500/30">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
+                <span className="text-2xl">💰</span>
+              </div>
+              <div>
+                <p className="text-gray-400 text-sm">我的课程收入（可提取）</p>
+                <p className="text-3xl font-bold text-yellow-400">
+                  {parseFloat(earnings).toFixed(4)} <span className="text-lg text-yellow-500">YD</span>
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleWithdraw}
+              disabled={isLoading || parseFloat(earnings) <= 0}
+              className={`px-6 py-3 rounded-xl font-semibold transition-all ${
+                parseFloat(earnings) > 0 && !isLoading
+                  ? 'bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-black'
+                  : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+              }`}
+            >
+              {isLoading ? (
+                <span className="flex items-center gap-2">
+                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  提取中...
+                </span>
+              ) : (
+                '提取收入'
+              )}
+            </button>
+          </div>
+          <p className="text-gray-500 text-xs mt-4">
+            * 当学员购买您的课程时，您将获得课程价格的 95%（平台收取 5% 手续费）
+          </p>
         </div>
 
         {hasCourses && (

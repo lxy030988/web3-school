@@ -274,10 +274,58 @@ export const CourseMarketABI = [
     "type": "function"
   },
   {
+    // 函数输入参数：作者地址（映射键）
+    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    // 函数名称：查询作者待提取的收入
+    "name": "authorEarnings",
+    // 函数返回值：待提取的YD代币数量
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    // 状态可变性：只读，不修改状态
+    "stateMutability": "view",
+    // 类型：函数
+    "type": "function"
+  },
+  {
     // 函数输入参数：无
     "inputs": [],
-    // 函数名称：提取课程销售收入
+    // 函数名称：提取课程销售收入（作者）
     "name": "withdrawEarnings",
+    // 函数返回值：无
+    "outputs": [],
+    // 状态可变性：非支付函数，修改状态但不接收以太币
+    "stateMutability": "nonpayable",
+    // 类型：函数
+    "type": "function"
+  },
+  {
+    // 函数输入参数：无
+    "inputs": [],
+    // 函数名称：获取合约所有者地址
+    "name": "owner",
+    // 函数返回值：所有者地址
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    // 状态可变性：只读，不修改状态
+    "stateMutability": "view",
+    // 类型：函数
+    "type": "function"
+  },
+  {
+    // 函数输入参数：无
+    "inputs": [],
+    // 函数名称：查询平台累计收益
+    "name": "platformEarnings",
+    // 函数返回值：平台累计的YD代币数量
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    // 状态可变性：只读，不修改状态
+    "stateMutability": "view",
+    // 类型：函数
+    "type": "function"
+  },
+  {
+    // 函数输入参数：无
+    "inputs": [],
+    // 函数名称：提取平台收益（仅Owner）
+    "name": "withdrawPlatformEarnings",
     // 函数返回值：无
     "outputs": [],
     // 状态可变性：非支付函数，修改状态但不接收以太币

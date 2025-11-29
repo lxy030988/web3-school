@@ -4,7 +4,7 @@
  */
 
 // 导入 wagmi 相关 hooks
-import { useAccount, useReadContract, useWriteContract, useSignMessage, useChainId, useBalance } from 'wagmi'
+import { useAccount, useReadContract, useWriteContract, useSignMessage, useChainId, useBalance, useWaitForTransactionReceipt } from 'wagmi'
 
 // 导入 viem 工具函数，用于处理以太币单位转换
 import { parseEther, formatEther } from 'viem'
@@ -26,13 +26,13 @@ import { YDTokenABI, CourseMarketABI, CourseFactoryABI, UserProfileABI, AaveStak
 export function useYDToken() {
   // 获取当前连接的钱包地址
   const { address } = useAccount()
-  
+
   // 获取当前区块链网络 ID
   const chainId = useChainId()
-  
+
   // 获取 YD 代币合约地址
   const tokenAddress = getContractAddress('YDToken', chainId)
-  
+
   // 获取课程市场合约地址
   const marketAddress = getContractAddress('CourseMarket', chainId)
 
@@ -47,7 +47,7 @@ export function useYDToken() {
   })
 
   // 查询用户对课程市场合约的授权额度
-  const { data: currentAllowance } = useReadContract({
+  const { data: currentAllowance, refetch: refetchAllowance } = useReadContract({
     address: tokenAddress,
     abi: YDTokenABI,
     functionName: 'allowance',
@@ -78,6 +78,8 @@ export function useYDToken() {
     txHash,
     // 刷新余额的函数
     refetchBalance,
+    // 刷新授权额度的函数
+    refetchAllowance,
     // 购买代币的函数
     buyTokens: eth =>
       writeContract({
@@ -702,6 +704,135 @@ export function useAaveStakingOwner() {
       writeContract({
         address: stakingAddress,
         abi: AaveStakingABI,
+        functionName: 'withdrawPlatformEarnings'
+      })
+  }
+}
+
+/**
+ * 作者课程收入 Hook
+ * 提供查询和提取课程销售收入的功能
+ * @returns {Object} 包含收入相关状态和函数的对象
+ */
+export function useAuthorEarnings() {
+  // 获取当前连接的钱包地址
+  const { address } = useAccount()
+
+  // 获取当前区块链网络 ID
+  const chainId = useChainId()
+
+  // 获取课程市场合约地址
+  const marketAddress = getContractAddress('CourseMarket', chainId)
+
+  // 查询作者待提取的收入
+  const { data: earnings, refetch: refetchEarnings } = useReadContract({
+    address: marketAddress,
+    abi: CourseMarketABI,
+    functionName: 'authorEarnings',
+    args: [address], // 作者地址
+    enabled: !!address && !!marketAddress, // 仅在有地址和合约地址时启用查询
+    watch: true // 自动监听变化
+  })
+
+  // 获取写入合约的函数和状态
+  const { writeContract, data: txHash, isPending } = useWriteContract()
+
+  // 等待交易确认
+  const { isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+    hash: txHash,
+    enabled: !!txHash
+  })
+
+  // 格式化收入金额
+  const earningsAmount = earnings ? formatEther(earnings) : '0'
+
+  // 调试日志
+  console.log('useAuthorEarnings - Address:', address, 'Earnings:', earningsAmount, 'YD')
+
+  // 返回收入相关的状态和函数
+  return {
+    // 待提取的收入金额
+    earnings: earningsAmount,
+    // 交易是否正在处理中
+    isPending,
+    // 交易是否已确认
+    isConfirmed,
+    // 最新交易的哈希值
+    txHash,
+    // 刷新收入的函数
+    refetchEarnings,
+    // 提取收入的函数
+    withdrawEarnings: () =>
+      writeContract({
+        address: marketAddress,
+        abi: CourseMarketABI,
+        functionName: 'withdrawEarnings'
+      })
+  }
+}
+
+/**
+ * CourseMarket Owner 管理 Hook
+ * 提供课程市场合约 owner 专属功能：查看和提取平台收益（5%手续费）
+ * @returns {Object} 包含 owner 相关状态和函数的对象
+ */
+export function useCourseMarketOwner() {
+  // 获取当前连接的钱包地址
+  const { address } = useAccount()
+
+  // 获取当前区块链网络 ID
+  const chainId = useChainId()
+
+  // 获取 CourseMarket 合约地址
+  const marketAddress = getContractAddress('CourseMarket', chainId)
+
+  // 查询合约 owner 地址
+  const { data: ownerAddress } = useReadContract({
+    address: marketAddress,
+    abi: CourseMarketABI,
+    functionName: 'owner',
+    enabled: !!marketAddress
+  })
+
+  // 查询平台累计收益
+  const { data: platformEarnings, refetch: refetchEarnings } = useReadContract({
+    address: marketAddress,
+    abi: CourseMarketABI,
+    functionName: 'platformEarnings',
+    enabled: !!marketAddress,
+    watch: true // 自动监听变化
+  })
+
+  // 获取写入合约的函数和状态
+  const { writeContract, data: txHash, isPending } = useWriteContract()
+
+  // 等待交易确认
+  const { isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+    hash: txHash,
+    enabled: !!txHash
+  })
+
+  // 判断当前用户是否为 owner
+  const isOwner = address && ownerAddress && address.toLowerCase() === ownerAddress.toLowerCase()
+
+  // 返回 owner 相关的状态和函数
+  return {
+    // 状态数据
+    isOwner, // 当前用户是否为 owner
+    ownerAddress, // owner 地址
+    platformEarnings: platformEarnings ? formatEther(platformEarnings) : '0', // 平台累计收益（YD）
+    isPending, // 交易是否正在处理中
+    isConfirmed, // 交易是否已确认
+    txHash, // 最新交易的哈希值
+
+    // 刷新函数
+    refetchEarnings, // 刷新收益数据
+
+    // Owner 操作
+    withdrawPlatformEarnings: () => // 提取平台收益
+      writeContract({
+        address: marketAddress,
+        abi: CourseMarketABI,
         functionName: 'withdrawPlatformEarnings'
       })
   }
