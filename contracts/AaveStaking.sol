@@ -231,9 +231,10 @@ contract AaveStaking is Ownable, ReentrancyGuard {
      * 执行流程：
      * 1. 检查用户质押余额是否足够
      * 2. 计算用户的 Aave 收益份额（80%）
-     * 3. 从 Aave 提取本金 + 收益
-     * 4. ETH 会直接转到用户钱包
-     * 5. 更新质押数据
+     * 3. 授权 WETH Gateway 使用 aWETH
+     * 4. 从 Aave 提取本金 + 收益
+     * 5. ETH 会直接转到用户钱包
+     * 6. 更新质押数据
      *
      * 收益分配：
      * - 用户获得：本金 + 80% 的 Aave 收益
@@ -270,6 +271,9 @@ contract AaveStaking is Ownable, ReentrancyGuard {
         // 更新质押数据（先扣除，防止重入）
         stakes[msg.sender].ethStaked -= amount;
         totalETHStaked -= amount;
+
+        // 授权 WETH Gateway 使用 aWETH（必须先授权才能提取）
+        IERC20(aWETH).approve(WETH_GATEWAY, actualWithdrawAmount);
 
         // 从 Aave 提取 ETH 到用户地址
         IWETHGateway(WETH_GATEWAY).withdrawETH(AAVE_POOL, actualWithdrawAmount, msg.sender);
@@ -335,7 +339,8 @@ contract AaveStaking is Ownable, ReentrancyGuard {
      * 执行流程：
      * 1. 计算 Aave 总收益
      * 2. 计算 20% 平台费用
-     * 3. 从 Aave 提取到 owner 地址
+     * 3. 授权 WETH Gateway 使用 aWETH
+     * 4. 从 Aave 提取到 owner 地址
      *
      * @custom:security 使用 nonReentrant 防止重入攻击，onlyOwner 限制权限
      */
@@ -347,6 +352,9 @@ contract AaveStaking is Ownable, ReentrancyGuard {
         uint256 platformEarnings = (totalEarnings * 20) / 100;
 
         require(platformEarnings > 0, "No platform earnings");
+
+        // 授权 WETH Gateway 使用 aWETH（必须先授权才能提取）
+        IERC20(aWETH).approve(WETH_GATEWAY, platformEarnings);
 
         // 从 Aave 提取到 owner 地址
         IWETHGateway(WETH_GATEWAY).withdrawETH(AAVE_POOL, platformEarnings, owner());
@@ -436,4 +444,31 @@ contract AaveStaking is Ownable, ReentrancyGuard {
      * @dev 允许合约接收 ETH
      */
     receive() external payable {}
+
+    // ============ 紧急函数（仅 Owner）============
+
+    /**
+     * @notice 紧急提取任意 ERC20 代币（仅 owner）
+     * @dev 用于在紧急情况下救援被锁定的代币
+     * @param token 要提取的代币地址
+     * @param amount 要提取的数量
+     *
+     * ⚠️ 警告：此函数仅用于紧急情况，请谨慎使用
+     */
+    function emergencyWithdrawToken(address token, uint256 amount) external onlyOwner {
+        IERC20(token).safeTransfer(owner(), amount);
+    }
+
+    /**
+     * @notice 紧急提取 ETH（仅 owner）
+     * @dev 用于在紧急情况下救援被锁定的 ETH
+     *
+     * ⚠️ 警告：此函数仅用于紧急情况，请谨慎使用
+     */
+    function emergencyWithdrawETH() external onlyOwner {
+        uint256 balance = address(this).balance;
+        require(balance > 0, "No ETH to withdraw");
+        (bool success, ) = owner().call{value: balance}("");
+        require(success, "ETH transfer failed");
+    }
 }

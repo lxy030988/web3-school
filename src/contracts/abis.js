@@ -1,7 +1,7 @@
 /**
  * 智能合约 ABI 文件
  * 由 scripts/extract-abis.js 自动生成
- * 生成时间: 2025/11/29 19:04:02
+ * 生成时间: 2025/11/29 20:09:22
  *
  * 请勿手动修改此文件，如需更新请运行:
  * node scripts/extract-abis.js
@@ -1811,6 +1811,31 @@ export const AaveStakingABI = [
       }
     ],
     "name": "depositYD",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "emergencyWithdrawETH",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "emergencyWithdrawToken",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
