@@ -23,11 +23,11 @@ export const CONTRACT_ADDRESSES = {
   },
   // Sepolia 测试网络（待部署）
   [sepolia.id]: {
-    YDToken: '0x31466Ee6B138491681e2Ed887543E9178c0bCd70',
-    CourseFactory: '0x2c450971f7D7BAf07FF7d614c4d3B75Df9091Bd8',
-    CourseMarket: '0x83e32f9FDD94020a79eb32cBA8E99f80b8eB6cc9',
-    UserProfile: '0x5034b46A4CB2c195Aa44e44009dE4741B973f72a',
-    AaveStaking: '0x3a5260C13d97c30f09570e997c524E4Fdff45fe1'
+    YDToken: '0xBeCBF37bAa30979622141595301bD0E859a6C2FA',
+    CourseFactory: '0x72d4d669bDEf0a46076A6CAdf546622b371a9C9E',
+    CourseMarket: '0x9565ABe4B5f501a49023E12eb69125F321ca1A62',
+    UserProfile: '0xdc4D7e9292D4B96D957B01A40D868681cB4E6376',
+    AaveStaking: '0x5487C6297D01b437F21E6B1bBc32cB6729afbd39'
   }
 }
 
@@ -37,7 +37,7 @@ export const config = createConfig({
   transports: {
     [hardhat.id]: http(),
     [mainnet.id]: http(),
-    [sepolia.id]: http('https://sepolia.infura.io/v3/e39eb2cf31af4df7a8295c99be90d363')
+    [sepolia.id]: http()
   },
   defaultChainId: sepolia.id
 })
