@@ -13,11 +13,13 @@
 **免费获取渠道**：
 
 1. **Alchemy Faucet**（推荐）
+
    - 网址：https://sepoliafaucet.com/
    - 需要 Alchemy 账号
    - 每天可领取 0.5 ETH
 
 2. **Infura Faucet**
+
    - 网址：https://www.infura.io/faucet/sepolia
    - 需要 Infura 账号
 
@@ -61,6 +63,7 @@ ETHERSCAN_API_KEY=your_etherscan_api_key
 ```
 
 **⚠️ 安全提示**：
+
 - 永远不要提交 `.env` 到 Git
 - 使用测试账户，不要用主网账户
 - `.gitignore` 已经包含 `.env`
@@ -132,10 +135,10 @@ pnpm add dotenv
 
 ```bash
 # 查看要部署的账户
-npx hardhat run scripts/check-account.js --network sepolia
+npx hardhat run scripts/check-account-sepolia.js --network sepolia
 ```
 
-创建检查脚本 `scripts/check-account.js`：
+创建检查脚本 `scripts/check-account-sepolia.js`：
 
 ```javascript
 import hre from 'hardhat'
@@ -143,7 +146,7 @@ import hre from 'hardhat'
 async function main() {
   const [deployer] = await hre.ethers.getSigners()
   const balance = await hre.ethers.provider.getBalance(deployer.address)
-  
+
   console.log('部署账户:', deployer.address)
   console.log('账户余额:', hre.ethers.formatEther(balance), 'ETH')
   console.log('网络:', hre.network.name)
@@ -171,12 +174,12 @@ pnpm deploy:sepolia
 **部署输出示例**：
 
 ```
-Deploying with: 0xYourAddress
-YDToken: 0x1234...
-CourseFactory: 0x5678...
-CourseMarket: 0x9abc...
-UserProfile: 0xdef0...
-AaveStaking: 0x1111...
+Deploying with: 0xceFF7Bf0a08e65F141Ed190F7d7f502C7f226AD5
+YDToken: 0x31466Ee6B138491681e2Ed887543E9178c0bCd70
+CourseFactory: 0x2c450971f7D7BAf07FF7d614c4d3B75Df9091Bd8
+CourseMarket: 0x83e32f9FDD94020a79eb32cBA8E99f80b8eB6cc9
+UserProfile: 0x5034b46A4CB2c195Aa44e44009dE4741B973f72a
+AaveStaking: 0x3a5260C13d97c30f09570e997c524E4Fdff45fe1
 ```
 
 **⚠️ 保存这些地址！你需要更新前端配置。**
@@ -190,12 +193,13 @@ export const CONTRACT_ADDRESSES = {
   31337: {
     // 本地地址...
   },
-  11155111: {  // Sepolia chainId
+  11155111: {
+    // Sepolia chainId
     YDToken: '0x您的YDToken地址',
     CourseFactory: '0x您的CourseFactory地址',
     CourseMarket: '0x您的CourseMarket地址',
     UserProfile: '0x您的UserProfile地址',
-    AaveStaking: '0x您的AaveStaking地址',
+    AaveStaking: '0x您的AaveStaking地址'
   }
 }
 ```
@@ -248,6 +252,7 @@ pnpm dev
 ### 4. 查看 Aave 收益
 
 质押成功后，你会看到：
+
 - **已质押 ETH**：你质押的 ETH 数量
 - **aWETH 余额**：Aave 计息代币余额（会随时间增长）
 - **Aave 总收益**：实时累积的收益
@@ -308,6 +313,7 @@ pnpm dev
 **原因**：账户 ETH 不足以支付 Gas 费
 
 **解决**：
+
 - 去水龙头领取更多 Sepolia ETH
 - 每次部署大约需要 0.02-0.05 ETH
 
@@ -316,6 +322,7 @@ pnpm dev
 **原因**：收益需要时间累积
 
 **说明**：
+
 - Aave 收益是实时的，但增长很慢
 - 1 ETH 质押 1 天约获得 0.00008 ETH（按 3% APY）
 - 建议质押几天后再查看
@@ -325,6 +332,7 @@ pnpm dev
 **原因**：本地缓存的 nonce 与链上不一致
 
 **解决**：
+
 1. 打开 MetaMask
 2. 设置 → 高级 → 清除活动和 nonce 数据
 3. 重新尝试交易
@@ -334,6 +342,7 @@ pnpm dev
 **原因**：Gas 费设置过低或网络拥堵
 
 **解决**：
+
 - 在 MetaMask 中加速交易
 - 或等待网络空闲时重试
 
@@ -368,12 +377,14 @@ pnpm dev
 现在你的 Web3 School 已经部署到 Sepolia 测试网，可以使用完整的 Aave 集成功能了！
 
 **下一步**：
+
 - 创建一些示例课程
 - 邀请朋友测试购买功能
 - 体验 ETH 质押获得收益
 - 准备部署到主网
 
 **有问题？**
+
 - 查看 Aave 文档：https://docs.aave.com/
 - 查看 Hardhat 文档：https://hardhat.org/
 - 查看项目 README.md

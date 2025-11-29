@@ -28,22 +28,22 @@ import { useNavigate } from 'react-router-dom'
 export default function CreateCoursePage() {
   // 获取钱包连接状态
   const { isConnected } = useAccount()
-  
+
   // 获取导航函数
   const navigate = useNavigate()
-  
+
   // 获取当前区块链网络 ID
   const chainId = useChainId()
-  
+
   // 获取课程工厂合约地址
   const factoryAddress = getContractAddress('CourseFactory', chainId)
-  
+
   // 获取写入合约的函数和状态
   const { writeContract, data: hash, isPending, error: writeError } = useWriteContract()
-  
+
   // 获取交易确认状态
   const { isLoading: isConfirming, isSuccess, error: confirmError } = useWaitForTransactionReceipt({ hash })
-  
+
   // 交易状态提示
   const [txStatus, setTxStatus] = useState('')
 
@@ -76,7 +76,7 @@ export default function CreateCoursePage() {
     if (isSuccess) {
       // 设置成功状态提示
       setTxStatus('课程创建成功!即将跳转...')
-      
+
       // 清空表单数据
       setFormData({
         name: '',
@@ -85,10 +85,10 @@ export default function CreateCoursePage() {
         price: '',
         contentURI: ''
       })
-      
-      // 延迟跳转到课程市场页面
+
+      // 延迟跳转到我的课程页面
       setTimeout(() => {
-        navigate('/courses')
+        navigate('/my-courses')
       }, 1500)
     }
   }, [isSuccess, navigate]) // 当交易成功或导航函数变化时执行
@@ -126,7 +126,7 @@ export default function CreateCoursePage() {
    * 调用智能合约创建课程
    * @param {Event} e - 表单提交事件
    */
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     // 阻止表单默认提交行为
     e.preventDefault()
 
@@ -167,7 +167,7 @@ export default function CreateCoursePage() {
    * 更新表单数据状态
    * @param {Event} e - 输入事件
    */
-  const handleChange = (e) => {
+  const handleChange = e => {
     // 获取输入名称和值
     const { name, value } = e.target
     // 更新表单数据
@@ -189,7 +189,9 @@ export default function CreateCoursePage() {
     <div className="min-h-screen py-12 px-4">
       <div className="max-w-3xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">创建<span className="gradient-text">课程</span></h1>
+          <h1 className="text-4xl font-bold mb-2">
+            创建<span className="gradient-text">课程</span>
+          </h1>
           <p className="text-gray-400">发布你的知识,赚取收益</p>
         </div>
 
@@ -265,16 +267,12 @@ export default function CreateCoursePage() {
                 step="1"
                 required
               />
-              <p className="text-sm text-gray-500 mt-1">
-                学员购买课程需要支付的 YD 代币数量
-              </p>
+              <p className="text-sm text-gray-500 mt-1">学员购买课程需要支付的 YD 代币数量</p>
             </div>
 
             {/* 内容 URI */}
             <div>
-              <label className="block text-sm font-medium mb-2">
-                内容 URI (可选)
-              </label>
+              <label className="block text-sm font-medium mb-2">内容 URI (可选)</label>
               <input
                 type="text"
                 name="contentURI"
@@ -284,14 +282,18 @@ export default function CreateCoursePage() {
                 className="input-field"
                 disabled={isPending}
               />
-              <p className="text-sm text-gray-500 mt-1">
-                课程内容的存储地址 (IPFS、Arweave 等)
-              </p>
+              <p className="text-sm text-gray-500 mt-1">课程内容的存储地址 (IPFS、Arweave 等)</p>
             </div>
 
             {/* 状态提示 */}
             {txStatus && (
-              <div className={`p-4 rounded-xl ${txStatus.includes('失败') ? 'bg-red-500/10 border border-red-500/20 text-red-400' : 'bg-green-500/10 border border-green-500/20 text-green-400'}`}>
+              <div
+                className={`p-4 rounded-xl ${
+                  txStatus.includes('失败')
+                    ? 'bg-red-500/10 border border-red-500/20 text-red-400'
+                    : 'bg-green-500/10 border border-green-500/20 text-green-400'
+                }`}
+              >
                 {txStatus}
               </div>
             )}
@@ -306,11 +308,7 @@ export default function CreateCoursePage() {
               >
                 取消
               </button>
-              <button
-                type="submit"
-                className="flex-1 btn-primary"
-                disabled={isPending || isConfirming}
-              >
+              <button type="submit" className="flex-1 btn-primary" disabled={isPending || isConfirming}>
                 {isPending || isConfirming ? '创建中...' : '创建课程'}
               </button>
             </div>
