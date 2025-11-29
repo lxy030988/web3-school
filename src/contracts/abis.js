@@ -1,524 +1,2038 @@
 /**
- * YDToken 智能合约 ABI (应用二进制接口)
- * 包含与 YD 代币交互所需的所有函数和事件定义
+ * 智能合约 ABI 文件
+ * 由 scripts/extract-abis.js 自动生成
+ * 生成时间: 2025/11/29 19:04:02
+ *
+ * 请勿手动修改此文件，如需更新请运行:
+ * node scripts/extract-abis.js
  */
+
 export const YDTokenABI = [
   {
-    // 函数输入参数
-    "inputs": [{ "internalType": "address", "name": "account", "type": "address" }],
-    // 函数名称：查询指定地址的代币余额
-    "name": "balanceOf",
-    // 函数返回值
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    // 状态可变性：只读，不修改状态
-    "stateMutability": "view",
-    // 类型：函数
-    "type": "function"
-  },
-  {
-    // 函数输入参数：授权地址和授权数量
-    "inputs": [
-      { "internalType": "address", "name": "spender", "type": "address" },
-      { "internalType": "uint256", "name": "value", "type": "uint256" }
-    ],
-    // 函数名称：授权指定地址使用一定数量的代币
-    "name": "approve",
-    // 函数返回值：是否授权成功
-    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
-    // 状态可变性：非支付函数，修改状态但不接收以太币
+    "inputs": [],
     "stateMutability": "nonpayable",
-    // 类型：函数
+    "type": "constructor"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "spender",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "allowance",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "needed",
+        "type": "uint256"
+      }
+    ],
+    "name": "ERC20InsufficientAllowance",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "balance",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "needed",
+        "type": "uint256"
+      }
+    ],
+    "name": "ERC20InsufficientBalance",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "approver",
+        "type": "address"
+      }
+    ],
+    "name": "ERC20InvalidApprover",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "receiver",
+        "type": "address"
+      }
+    ],
+    "name": "ERC20InvalidReceiver",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      }
+    ],
+    "name": "ERC20InvalidSender",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "spender",
+        "type": "address"
+      }
+    ],
+    "name": "ERC20InvalidSpender",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnableInvalidOwner",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "OwnableUnauthorizedAccount",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "spender",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "value",
+        "type": "uint256"
+      }
+    ],
+    "name": "Approval",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "previousOwner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnershipTransferred",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "oldPrice",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newPrice",
+        "type": "uint256"
+      }
+    ],
+    "name": "TokenPriceUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "buyer",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "ethAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "tokenAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "TokensPurchased",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "from",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "value",
+        "type": "uint256"
+      }
+    ],
+    "name": "Transfer",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "MAX_SUPPLY",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
-    // 函数输入参数：代币所有者和授权使用者的地址
     "inputs": [
-      { "internalType": "address", "name": "owner", "type": "address" },
-      { "internalType": "address", "name": "spender", "type": "address" }
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "spender",
+        "type": "address"
+      }
     ],
-    // 函数名称：查询指定地址对另一个地址的授权额度
     "name": "allowance",
-    // 函数返回值：授权的代币数量
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    // 状态可变性：只读，不修改状态
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "view",
-    // 类型：函数
     "type": "function"
   },
   {
-    // 函数输入参数：无
-    "inputs": [],
-    // 函数名称：购买代币
-    "name": "buyTokens",
-    // 函数返回值：无
-    "outputs": [],
-    // 状态可变性：支付函数，可以接收以太币
-    "stateMutability": "payable",
-    // 类型：函数
-    "type": "function"
-  },
-  {
-    // 函数输入参数：无
-    "inputs": [],
-    // 函数名称：获取代币价格
-    "name": "tokenPrice",
-    // 函数返回值：代币价格（以wei为单位）
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    // 状态可变性：只读，不修改状态
-    "stateMutability": "view",
-    // 类型：函数
-    "type": "function"
-  },
-  {
-    // 函数输入参数：无
-    "inputs": [],
-    // 函数名称：获取合约所有者地址
-    "name": "owner",
-    // 函数返回值：所有者地址
-    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
-    // 状态可变性：只读，不修改状态
-    "stateMutability": "view",
-    // 类型：函数
-    "type": "function"
-  },
-  {
-    // 函数输入参数：无
-    "inputs": [],
-    // 函数名称：提取合约中的 ETH（仅所有者）
-    "name": "withdraw",
-    // 函数返回值：无
-    "outputs": [],
-    // 状态可变性：非支付函数，修改状态但不接收以太币
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "spender",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "value",
+        "type": "uint256"
+      }
+    ],
+    "name": "approve",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
     "stateMutability": "nonpayable",
-    // 类型：函数
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "balanceOf",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "value",
+        "type": "uint256"
+      }
+    ],
+    "name": "burn",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "value",
+        "type": "uint256"
+      }
+    ],
+    "name": "burnFrom",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "buyTokens",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "decimals",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "mint",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "name",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "renounceOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "newPrice",
+        "type": "uint256"
+      }
+    ],
+    "name": "setTokenPrice",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "symbol",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "tokenPrice",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "totalSupply",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "value",
+        "type": "uint256"
+      }
+    ],
+    "name": "transfer",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "from",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "value",
+        "type": "uint256"
+      }
+    ],
+    "name": "transferFrom",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "transferOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "withdraw",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   }
 ]
 
-/**
- * CourseFactory 智能合约 ABI (应用二进制接口)
- * 包含与课程工厂合约交互所需的所有函数和事件定义
- */
 export const CourseFactoryABI = [
   {
-    // 函数输入参数：课程名称、描述、类别、价格和内容URI
-    "inputs": [
-      { "internalType": "string", "name": "name", "type": "string" },
-      { "internalType": "string", "name": "description", "type": "string" },
-      { "internalType": "string", "name": "category", "type": "string" },
-      { "internalType": "uint256", "name": "price", "type": "uint256" },
-      { "internalType": "string", "name": "contentURI", "type": "string" }
-    ],
-    // 函数名称：创建新课程
-    "name": "createCourse",
-    // 函数返回值：新创建课程的ID
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    // 状态可变性：非支付函数，修改状态但不接收以太币
+    "inputs": [],
     "stateMutability": "nonpayable",
-    // 类型：函数
+    "type": "constructor"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnableInvalidOwner",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "OwnableUnauthorizedAccount",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "courseId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "author",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "price",
+        "type": "uint256"
+      }
+    ],
+    "name": "CourseCreated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "courseId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "price",
+        "type": "uint256"
+      }
+    ],
+    "name": "CourseUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "previousOwner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnershipTransferred",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "allCourseIds",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
-    // 函数输入参数：课程ID
-    "inputs": [{ "internalType": "uint256", "name": "courseId", "type": "uint256" }],
-    // 函数名称：获取指定课程信息
-    "name": "getCourse",
-    // 函数返回值：包含课程详细信息的结构体
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "authorCourses",
     "outputs": [
       {
-        // 结构体组件：课程的各种属性
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "courseCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "courses",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "author",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "description",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "category",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "price",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "contentURI",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "createdAt",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "totalStudents",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "isActive",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "description",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "category",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "price",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "contentURI",
+        "type": "string"
+      }
+    ],
+    "name": "createCourse",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getAllCourses",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "courseId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getCourse",
+    "outputs": [
+      {
         "components": [
-          { "internalType": "uint256", "name": "id", "type": "uint256" },
-          { "internalType": "address", "name": "author", "type": "address" },
-          { "internalType": "string", "name": "name", "type": "string" },
-          { "internalType": "string", "name": "description", "type": "string" },
-          { "internalType": "string", "name": "category", "type": "string" },
-          { "internalType": "uint256", "name": "price", "type": "uint256" },
-          { "internalType": "string", "name": "contentURI", "type": "string" },
-          { "internalType": "uint256", "name": "createdAt", "type": "uint256" },
-          { "internalType": "uint256", "name": "totalStudents", "type": "uint256" },
-          { "internalType": "bool", "name": "isActive", "type": "bool" }
+          {
+            "internalType": "uint256",
+            "name": "id",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "author",
+            "type": "address"
+          },
+          {
+            "internalType": "string",
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "category",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          },
+          {
+            "internalType": "string",
+            "name": "contentURI",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "createdAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "totalStudents",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "isActive",
+            "type": "bool"
+          }
         ],
-        // 内部类型：CourseFactory.Course 结构体
         "internalType": "struct CourseFactory.Course",
         "name": "",
         "type": "tuple"
       }
     ],
-    // 状态可变性：只读，不修改状态
     "stateMutability": "view",
-    // 类型：函数
     "type": "function"
   },
   {
-    // 函数输入参数：无
-    "inputs": [],
-    // 函数名称：获取所有课程ID
-    "name": "getAllCourses",
-    // 函数返回值：包含所有课程ID的数组
-    "outputs": [{ "internalType": "uint256[]", "name": "", "type": "uint256[]" }],
-    // 状态可变性：只读，不修改状态
-    "stateMutability": "view",
-    // 类型：函数
-    "type": "function"
-  },
-  {
-    // 函数输入参数：课程ID、新名称、新描述和新价格
     "inputs": [
-      { "internalType": "uint256", "name": "courseId", "type": "uint256" },
-      { "internalType": "string", "name": "name", "type": "string" },
-      { "internalType": "string", "name": "description", "type": "string" },
-      { "internalType": "uint256", "name": "price", "type": "uint256" }
+      {
+        "internalType": "uint256",
+        "name": "courseId",
+        "type": "uint256"
+      }
     ],
-    // 函数名称：更新课程信息
-    "name": "updateCourse",
-    // 函数返回值：无
-    "outputs": [],
-    // 状态可变性：非支付函数，修改状态但不接收以太币
-    "stateMutability": "nonpayable",
-    // 类型：函数
-    "type": "function"
-  },
-  {
-    // 函数输入参数：课程ID
-    "inputs": [{ "internalType": "uint256", "name": "courseId", "type": "uint256" }],
-    // 函数名称：增加课程学生数量
     "name": "incrementStudents",
-    // 函数返回值：无
     "outputs": [],
-    // 状态可变性：非支付函数，修改状态但不接收以太币
     "stateMutability": "nonpayable",
-    // 类型：函数
     "type": "function"
   },
   {
-    // 是否匿名：否，事件可以被索引和筛选
-    "anonymous": false,
-    // 事件参数
-    "inputs": [
-      // 索引参数：课程ID，可用于事件筛选
-      { "indexed": true, "internalType": "uint256", "name": "courseId", "type": "uint256" },
-      // 索引参数：课程作者地址，可用于事件筛选
-      { "indexed": true, "internalType": "address", "name": "author", "type": "address" },
-      // 非索引参数：课程名称
-      { "indexed": false, "internalType": "string", "name": "name", "type": "string" },
-      // 非索引参数：课程价格
-      { "indexed": false, "internalType": "uint256", "name": "price", "type": "uint256" }
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
     ],
-    // 事件名称：课程创建事件
-    "name": "CourseCreated",
-    // 类型：事件
-    "type": "event"
+    "stateMutability": "view",
+    "type": "function"
   },
   {
-    // 是否匿名：否，事件可以被索引和筛选
-    "anonymous": false,
-    // 事件参数
+    "inputs": [],
+    "name": "renounceOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [
-      // 索引参数：课程ID，可用于事件筛选
-      { "indexed": true, "internalType": "uint256", "name": "courseId", "type": "uint256" },
-      // 非索引参数：课程名称
-      { "indexed": false, "internalType": "string", "name": "name", "type": "string" },
-      // 非索引参数：课程价格
-      { "indexed": false, "internalType": "uint256", "name": "price", "type": "uint256" }
+      {
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
     ],
-    // 事件名称：课程更新事件
-    "name": "CourseUpdated",
-    // 类型：事件
-    "type": "event"
+    "name": "transferOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "courseId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "description",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "price",
+        "type": "uint256"
+      }
+    ],
+    "name": "updateCourse",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
   }
 ]
 
-/**
- * CourseMarket 智能合约 ABI (应用二进制接口)
- * 包含与课程市场合约交互所需的所有函数和事件定义
- */
 export const CourseMarketABI = [
   {
-    // 函数输入参数：课程ID
-    "inputs": [{ "internalType": "uint256", "name": "courseId", "type": "uint256" }],
-    // 函数名称：购买课程
-    "name": "purchaseCourse",
-    // 函数返回值：无
-    "outputs": [],
-    // 状态可变性：非支付函数，修改状态但不接收以太币
-    "stateMutability": "nonpayable",
-    // 类型：函数
-    "type": "function"
-  },
-  {
-    // 函数输入参数：用户地址和课程ID（映射键）
     "inputs": [
-      { "internalType": "address", "name": "", "type": "address" },
-      { "internalType": "uint256", "name": "", "type": "uint256" }
+      {
+        "internalType": "address",
+        "name": "_ydToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_courseFactory",
+        "type": "address"
+      }
     ],
-    // 函数名称：检查用户是否已购买指定课程
-    "name": "hasPurchased",
-    // 函数返回值：是否已购买
-    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
-    // 状态可变性：只读，不修改状态
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnableInvalidOwner",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "OwnableUnauthorizedAccount",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ReentrancyGuardReentrantCall",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "SafeERC20FailedOperation",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "courseId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "buyer",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "author",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "price",
+        "type": "uint256"
+      }
+    ],
+    "name": "CoursePurchased",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "author",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "EarningsWithdrawn",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "previousOwner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnershipTransferred",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "PlatformEarningsWithdrawn",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "FEE_DENOMINATOR",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "view",
-    // 类型：函数
     "type": "function"
   },
   {
-    // 函数输入参数：用户地址
-    "inputs": [{ "internalType": "address", "name": "user", "type": "address" }],
-    // 函数名称：获取用户已购买的所有课程ID
-    "name": "getPurchasedCourses",
-    // 函数返回值：已购买课程ID的数组
-    "outputs": [{ "internalType": "uint256[]", "name": "", "type": "uint256[]" }],
-    // 状态可变性：只读，不修改状态
-    "stateMutability": "view",
-    // 类型：函数
-    "type": "function"
-  },
-  {
-    // 函数输入参数：作者地址（映射键）
-    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
-    // 函数名称：查询作者待提取的收入
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
     "name": "authorEarnings",
-    // 函数返回值：待提取的YD代币数量
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    // 状态可变性：只读，不修改状态
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "view",
-    // 类型：函数
     "type": "function"
   },
   {
-    // 函数输入参数：无
     "inputs": [],
-    // 函数名称：提取课程销售收入（作者）
-    "name": "withdrawEarnings",
-    // 函数返回值：无
-    "outputs": [],
-    // 状态可变性：非支付函数，修改状态但不接收以太币
-    "stateMutability": "nonpayable",
-    // 类型：函数
+    "name": "courseFactory",
+    "outputs": [
+      {
+        "internalType": "contract ICourseFactory",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
-    // 函数输入参数：无
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      }
+    ],
+    "name": "getPurchasedCourses",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "hasPurchased",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
-    // 函数名称：获取合约所有者地址
     "name": "owner",
-    // 函数返回值：所有者地址
-    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
-    // 状态可变性：只读，不修改状态
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
     "stateMutability": "view",
-    // 类型：函数
     "type": "function"
   },
   {
-    // 函数输入参数：无
     "inputs": [],
-    // 函数名称：查询平台累计收益
     "name": "platformEarnings",
-    // 函数返回值：平台累计的YD代币数量
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    // 状态可变性：只读，不修改状态
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "view",
-    // 类型：函数
     "type": "function"
   },
   {
-    // 函数输入参数：无
     "inputs": [],
-    // 函数名称：提取平台收益（仅Owner）
-    "name": "withdrawPlatformEarnings",
-    // 函数返回值：无
+    "name": "platformFeePercent",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "courseId",
+        "type": "uint256"
+      }
+    ],
+    "name": "purchaseCourse",
     "outputs": [],
-    // 状态可变性：非支付函数，修改状态但不接收以太币
     "stateMutability": "nonpayable",
-    // 类型：函数
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "renounceOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "transferOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "userPurchasedCourses",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "withdrawEarnings",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "withdrawPlatformEarnings",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "ydToken",
+    "outputs": [
+      {
+        "internalType": "contract IERC20",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   }
 ]
 
-/**
- * UserProfile 智能合约 ABI (应用二进制接口)
- * 包含与用户资料合约交互所需的所有函数定义
- */
 export const UserProfileABI = [
   {
-    // 函数输入参数：显示名称和签名
-    "inputs": [
-      { "internalType": "string", "name": "name", "type": "string" },
-      { "internalType": "bytes", "name": "signature", "type": "bytes" }
-    ],
-    // 函数名称：设置显示名称
-    "name": "setDisplayName",
-    // 函数返回值：无
-    "outputs": [],
-    // 状态可变性：非支付函数，修改状态但不接收以太币
+    "inputs": [],
     "stateMutability": "nonpayable",
-    // 类型：函数
-    "type": "function"
+    "type": "constructor"
   },
   {
-    // 函数输入参数：用户地址
-    "inputs": [{ "internalType": "address", "name": "user", "type": "address" }],
-    // 函数名称：获取显示名称
+    "inputs": [],
+    "name": "ECDSAInvalidSignature",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "length",
+        "type": "uint256"
+      }
+    ],
+    "name": "ECDSAInvalidSignatureLength",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "s",
+        "type": "bytes32"
+      }
+    ],
+    "name": "ECDSAInvalidSignatureS",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnableInvalidOwner",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "OwnableUnauthorizedAccount",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "newName",
+        "type": "string"
+      }
+    ],
+    "name": "DisplayNameChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "previousOwner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnershipTransferred",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      }
+    ],
     "name": "getDisplayName",
-    // 函数返回值：显示名称字符串
-    "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
-    // 状态可变性：只读，不修改状态
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
     "stateMutability": "view",
-    // 类型：函数
     "type": "function"
   },
   {
-    // 函数输入参数：用户地址
-    "inputs": [{ "internalType": "address", "name": "user", "type": "address" }],
-    // 函数名称：获取签名随机数
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      }
+    ],
     "name": "getSignatureNonce",
-    // 函数返回值：nonce值
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    // 状态可变性：只读，不修改状态
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "view",
-    // 类型：函数
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "profiles",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "displayName",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "updatedAt",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "coursesPurchased",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "renounceOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "internalType": "bytes",
+        "name": "signature",
+        "type": "bytes"
+      }
+    ],
+    "name": "setDisplayName",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "signatureNonces",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "transferOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   }
 ]
 
-/**
- * AaveStaking 智能合约 ABI (应用二进制接口)
- * 包含与 Aave 质押合约交互所需的所有函数和事件定义
- */
 export const AaveStakingABI = [
   {
-    // 函数输入参数：YD代币数量
-    "inputs": [{ "internalType": "uint256", "name": "amount", "type": "uint256" }],
-    // 函数名称：质押YD代币
-    "name": "depositYD",
-    // 函数返回值：无
-    "outputs": [],
-    // 状态可变性：非支付函数，修改状态但不接收以太币
-    "stateMutability": "nonpayable",
-    // 类型：函数
-    "type": "function"
-  },
-  {
-    // 函数输入参数：无
-    "inputs": [],
-    // 函数名称：质押以太币
-    "name": "depositETH",
-    // 函数返回值：无
-    "outputs": [],
-    // 状态可变性：支付函数，可以接收以太币
-    "stateMutability": "payable",
-    // 类型：函数
-    "type": "function"
-  },
-  {
-    // 函数输入参数：YD代币数量
-    "inputs": [{ "internalType": "uint256", "name": "amount", "type": "uint256" }],
-    // 函数名称：提取YD代币
-    "name": "withdrawYD",
-    // 函数返回值：无
-    "outputs": [],
-    // 状态可变性：非支付函数，修改状态但不接收以太币
-    "stateMutability": "nonpayable",
-    // 类型：函数
-    "type": "function"
-  },
-  {
-    // 函数输入参数：无
-    "inputs": [],
-    // 函数名称：领取质押奖励
-    "name": "claimRewards",
-    // 函数返回值：无
-    "outputs": [],
-    // 状态可变性：非支付函数，修改状态但不接收以太币
-    "stateMutability": "nonpayable",
-    // 类型：函数
-    "type": "function"
-  },
-  {
-    // 函数输入参数：无
-    "inputs": [],
-    // 函数名称：复投质押奖励
-    "name": "compoundRewards",
-    // 函数返回值：无
-    "outputs": [],
-    // 状态可变性：非支付函数，修改状态但不接收以太币
-    "stateMutability": "nonpayable",
-    // 类型：函数
-    "type": "function"
-  },
-  {
-    // 函数输入参数：用户地址
-    "inputs": [{ "internalType": "address", "name": "user", "type": "address" }],
-    // 函数名称：获取用户质押余额
-    "name": "getStakedBalance",
-    // 函数返回值：YD代币余额和ETH余额
-    "outputs": [
-      { "internalType": "uint256", "name": "", "type": "uint256" },
-      { "internalType": "uint256", "name": "", "type": "uint256" }
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_ydToken",
+        "type": "address"
+      }
     ],
-    // 状态可变性：只读，不修改状态
-    "stateMutability": "view",
-    // 类型：函数
-    "type": "function"
-  },
-  {
-    // 函数输入参数：用户地址
-    "inputs": [{ "internalType": "address", "name": "user", "type": "address" }],
-    // 函数名称：计算用户可获得的奖励
-    "name": "calculateRewards",
-    // 函数返回值：奖励数量
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    // 状态可变性：只读，不修改状态
-    "stateMutability": "view",
-    // 类型：函数
-    "type": "function"
-  },
-  {
-    // 函数输入参数：无
-    "inputs": [],
-    // 函数名称：获取当前年化收益率(APY)
-    "name": "getCurrentAPY",
-    // 函数返回值：APY值（以基点为单位，如500表示5%）
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    // 状态可变性：只读，不修改状态
-    "stateMutability": "view",
-    // 类型：函数
-    "type": "function"
-  },
-  {
-    // 函数输入参数：无
-    "inputs": [],
-    // 函数名称：查询平台可提取的收益（20%）
-    "name": "getPlatformEarnings",
-    // 函数返回值：平台可提取的ETH数量
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    // 状态可变性：只读，不修改状态
-    "stateMutability": "view",
-    // 类型：函数
-    "type": "function"
-  },
-  {
-    // 函数输入参数：无
-    "inputs": [],
-    // 函数名称：平台提取20%的Aave收益（仅owner）
-    "name": "withdrawPlatformEarnings",
-    // 函数返回值：无
-    "outputs": [],
-    // 状态可变性：非支付函数，修改状态但不接收以太币
     "stateMutability": "nonpayable",
-    // 类型：函数
+    "type": "constructor"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnableInvalidOwner",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "OwnableUnauthorizedAccount",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ReentrancyGuardReentrantCall",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "SafeERC20FailedOperation",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "tokenType",
+        "type": "string"
+      }
+    ],
+    "name": "Deposited",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "previousOwner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnershipTransferred",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "RewardsClaimed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "RewardsCompounded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "tokenType",
+        "type": "string"
+      }
+    ],
+    "name": "Withdrawn",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "AAVE_POOL",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
-    // 函数输入参数：无
     "inputs": [],
-    // 函数名称：获取合约所有者地址
-    "name": "owner",
-    // 函数返回值：所有者地址
-    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
-    // 状态可变性：只读，不修改状态
+    "name": "WETH_GATEWAY",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
     "stateMutability": "view",
-    // 类型：函数
     "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "aWETH",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "baseAPY",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      }
+    ],
+    "name": "calculateRewards",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "claimRewards",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "compoundRewards",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "depositETH",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "depositYD",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getAaveBalance",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getAaveEarnings",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getCurrentAPY",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getPlatformEarnings",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      }
+    ],
+    "name": "getStakedBalance",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "renounceOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "stakes",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "ydStaked",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "ethStaked",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "depositTime",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "claimedRewards",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "totalETHStaked",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "totalYDStaked",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "transferOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "withdrawETH",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "withdrawPlatformEarnings",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "withdrawYD",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "ydToken",
+    "outputs": [
+      {
+        "internalType": "contract IERC20",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "stateMutability": "payable",
+    "type": "receive"
   }
 ]
+
