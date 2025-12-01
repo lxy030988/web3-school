@@ -37,7 +37,7 @@ export const config = createConfig({
   transports: {
     [hardhat.id]: http(),
     [mainnet.id]: http(),
-    [sepolia.id]: http()
+    [sepolia.id]: http('https://sepolia.infura.io/v3/e39eb2cf31af4df7a8295c99be90d363')
   },
   defaultChainId: sepolia.id
 })
