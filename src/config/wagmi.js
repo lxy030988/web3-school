@@ -21,7 +21,7 @@ export const CONTRACT_ADDRESSES = {
     UserProfile: '0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0',
     AaveStaking: '0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82'
   },
-  // Sepolia 测试网络（待部署）
+  // Sepolia 测试网络
   [sepolia.id]: {
     YDToken: '0xBeCBF37bAa30979622141595301bD0E859a6C2FA',
     CourseFactory: '0x72d4d669bDEf0a46076A6CAdf546622b371a9C9E',

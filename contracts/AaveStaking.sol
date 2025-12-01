@@ -31,7 +31,7 @@ interface IWETHGateway {
  *
  * 主要功能：
  * 1. YD 代币质押：用户质押 YD 代币，获得 5% 年化收益
- * 2. ETH 质押：用户质押 ETH 到 Aave 协议（未完全实现）
+ * 2. ETH 质押：用户质押 ETH 到 Aave 协议
  * 3. 自动复投：每次存取款时自动将收益加到质押金额
  * 4. 手动操作：用户可以手动领取或复投收益
  *
@@ -259,14 +259,18 @@ contract AaveStaking is Ownable, ReentrancyGuard {
         uint256 userShare = 0;
         if (totalETHStaked > 0 && totalAaveEarnings > 0) {
             // 用户份额 = (用户质押金额 / 总质押) * 总收益
-            userShare = (stakes[msg.sender].ethStaked * totalAaveEarnings) / totalETHStaked;
+            userShare =
+                (stakes[msg.sender].ethStaked * totalAaveEarnings) /
+                totalETHStaked;
         }
 
         // 用户获得 80% 的收益
         uint256 userEarnings = (userShare * 80) / 100;
 
         // 实际提取金额 = 本金 + 80% 收益
-        uint256 actualWithdrawAmount = amount + (userEarnings * amount) / stakes[msg.sender].ethStaked;
+        uint256 actualWithdrawAmount = amount +
+            (userEarnings * amount) /
+            stakes[msg.sender].ethStaked;
 
         // 更新质押数据（先扣除，防止重入）
         stakes[msg.sender].ethStaked -= amount;
@@ -276,7 +280,11 @@ contract AaveStaking is Ownable, ReentrancyGuard {
         IERC20(aWETH).approve(WETH_GATEWAY, actualWithdrawAmount);
 
         // 从 Aave 提取 ETH 到用户地址
-        IWETHGateway(WETH_GATEWAY).withdrawETH(AAVE_POOL, actualWithdrawAmount, msg.sender);
+        IWETHGateway(WETH_GATEWAY).withdrawETH(
+            AAVE_POOL,
+            actualWithdrawAmount,
+            msg.sender
+        );
 
         emit Withdrawn(msg.sender, actualWithdrawAmount, "ETH");
 
@@ -357,7 +365,11 @@ contract AaveStaking is Ownable, ReentrancyGuard {
         IERC20(aWETH).approve(WETH_GATEWAY, platformEarnings);
 
         // 从 Aave 提取到 owner 地址
-        IWETHGateway(WETH_GATEWAY).withdrawETH(AAVE_POOL, platformEarnings, owner());
+        IWETHGateway(WETH_GATEWAY).withdrawETH(
+            AAVE_POOL,
+            platformEarnings,
+            owner()
+        );
 
         emit Withdrawn(owner(), platformEarnings, "ETH");
     }
@@ -455,7 +467,10 @@ contract AaveStaking is Ownable, ReentrancyGuard {
      *
      * ⚠️ 警告：此函数仅用于紧急情况，请谨慎使用
      */
-    function emergencyWithdrawToken(address token, uint256 amount) external onlyOwner {
+    function emergencyWithdrawToken(
+        address token,
+        uint256 amount
+    ) external onlyOwner {
         IERC20(token).safeTransfer(owner(), amount);
     }
 
